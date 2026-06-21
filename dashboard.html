@@ -62,9 +62,8 @@ tbody tr:hover { background:#faf6f0; }
 tbody td { padding:6px 9px; }
 tbody td.r { text-align:right; }
 tfoot td { padding:8px 9px; font-weight:700; border-top:2px solid var(--border); }
-tfoot td.r { text-align:right; }
+tfoot td.r { text-align:right; color:var(--red); }
 .neg { color:var(--red); }
-.pos { color:var(--green); }
 
 /* HORIZONTAL BAR */
 .h-bar { display:flex; align-items:center; gap:8px; margin-bottom:7px; }
@@ -109,10 +108,8 @@ tfoot td.r { text-align:right; }
 </div>
 
 <div class="controls">
-  <label>MÊS</label>
-  <select id="selMes" onchange="applyFilter()"><option value="">Todos</option></select>
-  <label>ANO</label>
-  <select id="selAno" onchange="applyFilter()"><option value="">Todos</option></select>
+  <label>MÊS/ANO</label>
+  <select id="selMesAno" onchange="applyFilter()"><option value="">Todos</option></select>
 </div>
 
 <!-- KPIs -->
@@ -176,22 +173,28 @@ function parseDate(v) {
   if (!v) return null;
   const m = String(v).match(/Date\((\d+),(\d+),(\d+)\)/);
   if (m) return new Date(+m[1], +m[2], +m[3]);
-  if (typeof v === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
-    const [d, mo, y] = v.split('/');
-    return new Date(+y, +mo - 1, +d);
+  if (typeof v === 'string') {
+    // dd/mm/yyyy
+    const m2 = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m2) return new Date(+m2[3], +m2[2]-1, +m2[1]);
+    // yyyy-mm-dd
+    const m3 = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m3) return new Date(+m3[1], +m3[2]-1, +m3[3]);
   }
   return null;
 }
 
 function fmtDate(v) {
   const d = parseDate(v);
-  return d ? d.toLocaleDateString('pt-BR') : '—';
+  return d ? d.toLocaleDateString('pt-BR') : (v ? String(v) : '—');
 }
 
 function fmt(n, dec = 2) {
   if (n == null || isNaN(+n)) return '—';
   return (+n).toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
+
+function val(t) { return parseFloat(t['Valor'] || 0); }
 
 function mkChart(id, config) {
   if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
@@ -202,105 +205,75 @@ function mkChart(id, config) {
 // ─── GLOBAL DATA ──────────────────────────────────────────────
 let allTrans = [], allOrc = [], allParc = [], resumo = {};
 
-// ─── FILTER ───────────────────────────────────────────────────
-function filtered() {
-  const mes = document.getElementById('selMes').value;
-  const ano = document.getElementById('selAno').value;
-  return allTrans.filter(t => {
-    const d = parseDate(t['Data']);
-    if (!d) return false;
-    if (ano && d.getFullYear() !== +ano) return false;
-    if (mes !== '' && d.getMonth() !== +mes) return false;
-    return true;
-  });
-}
-
-// ─── BUILD SELECTORS ──────────────────────────────────────────
+// ─── SELECTORS ────────────────────────────────────────────────
 function buildSelectors() {
+  // Use Mes/Ano column (format: "Jun/26") — most reliable
   const set = new Set();
-  const years = new Set();
-  allTrans.forEach(t => {
-    const d = parseDate(t['Data']);
-    if (!d) return;
-    set.add(`${d.getMonth()}_${d.getFullYear()}`);
-    years.add(d.getFullYear());
-  });
+  allTrans.forEach(t => { if (t['Mes/Ano']) set.add(String(t['Mes/Ano'])); });
 
   const sorted = [...set].sort((a, b) => {
-    const [am, ay] = a.split('_').map(Number);
-    const [bm, by] = b.split('_').map(Number);
-    return ay !== by ? ay - by : am - bm;
+    const parse = s => {
+      const [m, y] = s.split('/');
+      return (2000 + parseInt(y)) * 100 + MESES_PT.indexOf(m);
+    };
+    return parse(a) - parse(b);
   });
 
-  const sm = document.getElementById('selMes');
-  const sa = document.getElementById('selAno');
+  const sel = document.getElementById('selMesAno');
+  sel.innerHTML = '<option value="">Todos</option>';
+  sorted.forEach(ma => sel.appendChild(new Option(ma, ma)));
+  // Default: most recent
+  if (sorted.length) sel.value = sorted[sorted.length - 1];
+}
 
-  sm.innerHTML = '<option value="">Todos</option>';
-  sorted.forEach(k => {
-    const [m, y] = k.split('_').map(Number);
-    const o = new Option(`${MESES_PT[m]} ${y}`, m);
-    sm.appendChild(o);
-  });
-
-  sa.innerHTML = '<option value="">Todos</option>';
-  [...years].sort().forEach(y => sa.appendChild(new Option(y, y)));
-
-  // Default: most recent month
-  if (sorted.length) {
-    const [lm, ly] = sorted[sorted.length - 1].split('_').map(Number);
-    sm.value = lm;
-    sa.value = ly;
-  }
+// ─── FILTER ───────────────────────────────────────────────────
+function filtered() {
+  const mesAno = document.getElementById('selMesAno').value;
+  if (!mesAno) return allTrans;
+  return allTrans.filter(t => String(t['Mes/Ano'] || '') === mesAno);
 }
 
 // ─── KPIs ─────────────────────────────────────────────────────
 function renderKPIs(trans) {
-  // Total Cartão: acumulado até hoje (todos os meses)
-  const hoje = new Date();
+  // Total Cartão SAB: TODOS os débitos tipo "Cartao Credito" acumulados (não filtra por mês)
   const totalCartao = allTrans
-    .filter(t => {
-      const d = parseDate(t['Data']);
-      const v = parseFloat(t['Valor'] || 0);
-      const conta = (t['Pais/Conta'] || t['Tipo'] || '').toLowerCase();
-      return d && d <= hoje && v < 0 && conta.includes('cartao');
-    })
-    .reduce((s, t) => s + Math.abs(parseFloat(t['Valor'] || 0)), 0);
+    .filter(t => (t['Tipo'] || '') === 'Cartao Credito')
+    .reduce((s, t) => s + Math.abs(val(t)), 0);
 
-  // Total Arabia (SAR expenses no mês)
+  // Total Arabia SAB: despesas SAR (positivas — convenção do extrato SAB)
+  // Pais/Conta = "Arabia Saudita", valores são positivos (débitos)
   const totalArabia = trans
-    .filter(t => parseFloat(t['Valor'] || 0) < 0 && (t['Moeda'] === 'SAR'))
-    .reduce((s, t) => s + Math.abs(parseFloat(t['Valor'] || 0)), 0);
+    .filter(t => (t['Pais/Conta'] || '').includes('Arabia') || (t['Moeda'] || '') === 'SAR')
+    .reduce((s, t) => s + Math.abs(val(t)), 0);
 
-  // Total Espanha (EUR expenses no mês)
+  // Total Espanha: despesas EUR (negativas — convenção BBVA)
   const totalEspanha = trans
-    .filter(t => {
-      const v = parseFloat(t['Valor'] || 0);
-      const conta = (t['Pais/Conta'] || '').toLowerCase();
-      return v < 0 && (t['Moeda'] === 'EUR' || conta.includes('espanha') || conta.includes('bbva'));
-    })
-    .reduce((s, t) => s + Math.abs(parseFloat(t['Valor'] || 0)), 0);
+    .filter(t => (t['Pais/Conta'] || '') === 'Espanha' && val(t) < 0)
+    .reduce((s, t) => s + Math.abs(val(t)), 0);
 
-  const saldoOrc  = resumo['Saldo_EUR_Orc']      || 0;
-  const poupanca  = resumo['Saldo_Poupanca_EUR']  || 0;
+  // Para Investir (Atual): do Resumo pré-calculado pelo script Python
+  const saldoOrc = resumo['Saldo_EUR_Orc'] || 0;
 
-  // Próximo mês: receita orçada - despesas orçadas mensais
-  const recOrc = allOrc
-    .filter(o => (o['Grupo'] || '').toLowerCase().includes('receita') && o['Ativo'] !== 'Não')
+  // Para Investir (Próx. Mês): Receita EUR - Despesas EUR mensais (Espanha + GordaEspanha)
+  // Apenas EUR para não misturar moedas!
+  const recEUR = allOrc
+    .filter(o => o['Grupo'] === 'Receita' && (o['Moeda'] || '') === 'EUR')
     .reduce((s, o) => s + Math.abs(parseFloat(o['Valor'] || 0)), 0);
-  const despOrc = allOrc
+  const despEurMensal = allOrc
     .filter(o => {
-      const g = (o['Grupo'] || '').toLowerCase();
-      const p = (o['Periodicidade'] || '').toLowerCase();
-      return !g.includes('receita') && o['Ativo'] !== 'Não' && p === 'mensal';
+      const g = o['Grupo'] || '';
+      const m = (o['Moeda'] || '').toUpperCase();
+      // Apenas Espanha e GordaEspanha em EUR
+      return (g === 'Espanha' || g === 'GordaEspanha') && m === 'EUR' && o['Ativo'] !== 'Não';
     })
     .reduce((s, o) => s + Math.abs(parseFloat(o['Valor'] || 0)), 0);
-  const proxMes = recOrc > 0 ? recOrc - despOrc : null;
+  const proxMes = recEUR > 0 ? recEUR - despEurMensal : null;
 
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi blue">
       <div class="kpi-label">💳 Total Cartão SAB</div>
       <div class="kpi-value">${fmt(totalCartao, 0)} SAR</div>
-      <div class="kpi-sub">Acumulado até hoje</div>
+      <div class="kpi-sub">Acumulado (ciclo atual)</div>
     </div>
     <div class="kpi red">
       <div class="kpi-label">🇸🇦 Total Arabia SAB</div>
@@ -310,44 +283,44 @@ function renderKPIs(trans) {
     <div class="kpi orange">
       <div class="kpi-label">🇪🇸 Total Espanha</div>
       <div class="kpi-value">€ ${fmt(totalEspanha, 0)}</div>
-      <div class="kpi-sub">Mês selecionado</div>
+      <div class="kpi-sub">Mês selecionado (BBVA)</div>
     </div>
     <div class="kpi">
       <div class="kpi-label">📈 Para Investir (Atual)</div>
       <div class="kpi-value">€ ${fmt(saldoOrc)}</div>
-      <div class="kpi-sub">Após todas deduções</div>
+      <div class="kpi-sub">Orçado após todas deduções</div>
     </div>
     <div class="kpi purple">
       <div class="kpi-label">📅 Para Investir (Próx. Mês)</div>
       <div class="kpi-value">${proxMes != null ? '€ ' + fmt(proxMes, 0) : '—'}</div>
-      <div class="kpi-sub">Projeção orçamento</div>
+      <div class="kpi-sub">Projeção orçamento EUR</div>
     </div>
   `;
 }
 
 // ─── CHART: REAL VS ORÇADO ESPANHA ────────────────────────────
+// Real: transações BBVA (Pais/Conta = "Espanha"), valores negativos = despesa
+// Orçado: grupo "Espanha" EXATO no Orcamento (não GordaEspanha!)
 function renderEspanha(trans) {
   const realMap = {};
-  trans.filter(t => {
-    const v = parseFloat(t['Valor'] || 0);
-    const conta = (t['Pais/Conta'] || '').toLowerCase();
-    return v < 0 && (t['Moeda'] === 'EUR' || conta.includes('espanha') || conta.includes('bbva'));
-  }).forEach(t => {
-    const cat = t['Categoria'] || 'Outros';
-    realMap[cat] = (realMap[cat] || 0) + Math.abs(parseFloat(t['Valor'] || 0));
-  });
+  trans
+    .filter(t => (t['Pais/Conta'] || '') === 'Espanha' && val(t) < 0)
+    .forEach(t => {
+      const cat = t['Categoria'] || 'Outros';
+      realMap[cat] = (realMap[cat] || 0) + Math.abs(val(t));
+    });
 
   const orcMap = {};
-  allOrc.filter(o => {
-    const g = (o['Grupo'] || '').toLowerCase();
-    const m = (o['Moeda'] || '').toUpperCase();
-    return (g.includes('espanha') || m === 'EUR') && !g.includes('receita') && o['Ativo'] !== 'Não';
-  }).forEach(o => {
-    const cat = o['Descricao'] || 'Outros';
-    orcMap[cat] = (orcMap[cat] || 0) + Math.abs(parseFloat(o['Valor'] || 0));
-  });
+  allOrc
+    .filter(o => o['Grupo'] === 'Espanha') // EXATO — não inclui GordaEspanha
+    .forEach(o => {
+      const cat = o['Descricao'] || 'Outros';
+      orcMap[cat] = (orcMap[cat] || 0) + Math.abs(parseFloat(o['Valor'] || 0));
+    });
 
   const cats = [...new Set([...Object.keys(realMap), ...Object.keys(orcMap)])].sort();
+  if (!cats.length) { mkChart('cEspanha', { type:'bar', data:{ labels:['Sem dados'], datasets:[] } }); return; }
+
   mkChart('cEspanha', {
     type: 'bar',
     data: {
@@ -369,22 +342,26 @@ function renderEspanha(trans) {
 }
 
 // ─── CHART: ARABIA CATEGORIES ─────────────────────────────────
+// SAR transactions (Arabia Saudita): valores são POSITIVOS (débitos do extrato SAB)
 function renderArabia(trans) {
   const map = {};
-  trans.filter(t => parseFloat(t['Valor'] || 0) < 0 && t['Moeda'] === 'SAR')
+  trans
+    .filter(t => ((t['Pais/Conta'] || '').includes('Arabia') || (t['Moeda'] || '') === 'SAR') && Math.abs(val(t)) > 0)
     .forEach(t => {
       const cat = t['Categoria'] || 'Outros';
-      map[cat] = (map[cat] || 0) + Math.abs(parseFloat(t['Valor'] || 0));
+      map[cat] = (map[cat] || 0) + Math.abs(val(t));  // abs() cobre ambos os casos
     });
 
   const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  if (!sorted.length) { mkChart('cArabia', { type:'bar', data:{ labels:['Sem dados'], datasets:[] } }); return; }
+
   const pal = ['#e07b39','#2980b9','#6aaa64','#c0392b','#8e44ad','#f39c12','#1abc9c','#e67e22','#3498db','#27ae60','#e74c3c','#9b59b6'];
 
   mkChart('cArabia', {
     type: 'bar',
     data: {
       labels: sorted.map(([k]) => k),
-      datasets: [{ label: 'SAR', data: sorted.map(([,v]) => v), backgroundColor: pal, borderRadius: 4 }]
+      datasets: [{ label: 'SAR', data: sorted.map(([,v]) => v), backgroundColor: pal.slice(0, sorted.length), borderRadius: 4 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -399,7 +376,7 @@ function renderArabia(trans) {
 
 // ─── PARCELAMENTOS TIMELINE ────────────────────────────────────
 function renderParc() {
-  const active = allParc.filter(p => p['Ativo'] === 'Sim');
+  const active = allParc.filter(p => (p['Ativo'] || '') === 'Sim');
   if (!active.length) {
     document.getElementById('parcWrap').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Nenhum parcelamento ativo</div>';
     return;
@@ -415,18 +392,22 @@ function renderParc() {
   const totals = new Array(6).fill(0);
 
   const rows = active.map(p => {
-    const val   = parseFloat(p['Valor_SAR'] || 0);
-    const atual = parseInt(p['Parcela_Atual'] || 1);
-    const total = parseInt(p['Total_Parcelas'] || 1);
-    const left  = total - atual + 1;
+    const valorSAR = Math.abs(parseFloat(p['Valor_SAR'] || 0));
+    const atual    = parseInt(p['Parcela_Atual'] || 1);
+    const total    = parseInt(p['Total_Parcelas'] || 1);
+    const left     = total - atual + 1;
 
     const cells = cols.map((_, i) => {
-      if (i < left) { totals[i] += val; return `<td class="r neg">${fmt(val, 0)}</td>`; }
+      if (i < left) {
+        totals[i] += valorSAR;
+        return `<td class="r neg">${fmt(valorSAR, 0)}</td>`;
+      }
       return `<td class="r" style="color:var(--muted)">—</td>`;
     });
 
+    const desc = p['Descricao'] || '—';
     return `<tr>
-      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p['Descricao']||''}">${p['Descricao']||'—'}</td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc}</td>
       <td class="r">${atual}/${total}</td>
       ${cells.join('')}
     </tr>`;
@@ -441,7 +422,7 @@ function renderParc() {
       <tbody>${rows}</tbody>
       <tfoot><tr>
         <td colspan="2">Total SAR</td>
-        ${totals.map(t => `<td class="r neg">${fmt(t, 0)}</td>`).join('')}
+        ${totals.map(t => `<td class="r">${fmt(t, 0)}</td>`).join('')}
       </tr></tfoot>
     </table>`;
 }
@@ -450,15 +431,15 @@ function renderParc() {
 function renderGorda() {
   const gordaBRL  = resumo['GordaBrasil_BRL_Orc']  || 0;
   const gordaEUR  = resumo['GordaBrasil_EUR_Orc']  || 0;
-  const espEUR    = resumo['Espanha_EUR_Orc']       || 0;
-  const poupanca  = resumo['Saldo_Poupanca_EUR']    || 0;
+  const gordaEsp  = resumo['GordaEspanha_EUR_Orc'] || 0;
+  const poupanca  = resumo['Saldo_Poupanca_EUR']   || 0;
   const falta     = resumo['Falta_Meta_EUR']        || 0;
   const pct       = Math.min((poupanca / 200000) * 100, 100);
 
   document.getElementById('gordaWrap').innerHTML = `
     <div class="g-block verde">
-      <div class="g-title">🇪🇸 Espanha (EUR)</div>
-      <div class="g-val">€ ${fmt(espEUR)}</div>
+      <div class="g-title">🇪🇸 Gorda Espanha (EUR)</div>
+      <div class="g-val">€ ${fmt(gordaEsp)}</div>
       <div class="g-sub">Orçamento mensal</div>
     </div>
     <div class="g-block orange">
@@ -486,11 +467,14 @@ function renderGorda() {
 function renderRanking(trans) {
   const map = {};
   const moedaMap = {};
-  trans.filter(t => parseFloat(t['Valor'] || 0) < 0).forEach(t => {
+  trans.forEach(t => {
+    const v = val(t);
+    // SAR: positivos são despesas | EUR: negativos são despesas
+    const isExpense = (t['Moeda'] === 'SAR' && v > 0) || (t['Moeda'] === 'EUR' && v < 0);
+    if (!isExpense) return;
     const cat = t['Categoria'] || 'Outros';
-    const val = Math.abs(parseFloat(t['Valor'] || 0));
-    map[cat] = (map[cat] || 0) + val;
-    if (!moedaMap[cat]) moedaMap[cat] = t['Moeda'] || 'SAR';
+    map[cat] = (map[cat] || 0) + Math.abs(v);
+    if (!moedaMap[cat]) moedaMap[cat] = t['Moeda'] || '';
   });
 
   const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 12);
@@ -500,10 +484,10 @@ function renderRanking(trans) {
   }
 
   const max = sorted[0][1];
-  document.getElementById('rankingWrap').innerHTML = sorted.map(([cat, val]) => {
-    const pct = (val / max) * 100;
-    const m   = moedaMap[cat] || 'SAR';
-    const lbl = m === 'EUR' ? `€ ${fmt(val, 0)}` : `${fmt(val, 0)} SAR`;
+  document.getElementById('rankingWrap').innerHTML = sorted.map(([cat, v]) => {
+    const pct = (v / max) * 100;
+    const m   = moedaMap[cat] || '';
+    const lbl = m === 'EUR' ? `€ ${fmt(v, 0)}` : `${fmt(v, 0)}${m ? ' '+m : ''}`;
     return `<div class="h-bar">
       <div class="h-bar-label" title="${cat}">${cat}</div>
       <div class="h-bar-track">
@@ -533,7 +517,8 @@ async function init() {
       fetchSheet('Parcelamentos')
     ]);
     const resumoRows = await fetchSheet('Resumo');
-    resumo = resumoRows[0] || {};
+    // Usa a ÚLTIMA linha (mais recente) — não a primeira!
+    resumo = (resumoRows.length ? resumoRows[resumoRows.length - 1] : {}) || {};
 
     const att = resumo['Data_Atualizacao'];
     if (att) document.getElementById('lastUpdate').textContent = 'Atualizado: ' + fmtDate(att);
@@ -547,7 +532,7 @@ async function init() {
     console.error(e);
     document.getElementById('kpiRow').innerHTML =
       `<div style="color:var(--red);padding:20px;grid-column:1/-1">
-        ❌ Erro ao carregar dados.<br>
+        ❌ Erro ao carregar dados. <br>
         <small>Verifique se a planilha está pública (Compartilhar → Qualquer pessoa com o link).</small><br>
         <small style="opacity:.7">${e.message}</small>
       </div>`;
