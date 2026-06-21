@@ -6,252 +6,96 @@
 <title>Finanças Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#f2ede4; --card:#fff; --header:#3b2a1a; --header2:#5c3d1e;
+  --green:#6aaa64; --orange:#e07b39; --red:#c0392b; --blue:#2980b9;
+  --purple:#8e44ad; --text:#2c1a0e; --muted:#8a7060; --border:#ddd3c7;
+  --shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+body { font-family:'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--text); }
 
-  :root {
-    --bg: #f2ede4;
-    --card: #ffffff;
-    --header: #3b2a1a;
-    --header2: #5c3d1e;
-    --accent: #6aaa64;
-    --accent2: #e07b39;
-    --red: #d64045;
-    --text: #2c1a0e;
-    --muted: #8a7060;
-    --border: #d9cfc3;
-    --shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
+/* HEADER */
+.top-header { background:var(--header); color:#fff; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; }
+.top-header h1 { font-size:1.15rem; font-weight:700; }
+.top-header .sub { font-size:0.72rem; opacity:0.6; margin-top:1px; }
+#lastUpdate { font-size:0.73rem; opacity:0.6; }
 
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
+/* CONTROLS */
+.controls { background:var(--header2); padding:8px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.controls label { color:rgba(255,255,255,0.75); font-size:0.73rem; font-weight:600; letter-spacing:0.4px; }
+.controls select {
+  background:rgba(255,255,255,0.15); color:#fff;
+  border:1px solid rgba(255,255,255,0.3); border-radius:6px;
+  padding:5px 10px; font-size:0.8rem; cursor:pointer; font-family:inherit;
+}
+.controls select option { background:#5c3d1e; }
 
-  /* HEADER */
-  .top-header {
-    background: var(--header);
-    color: white;
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .top-header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.5px; }
-  .top-header .subtitle { font-size: 0.8rem; opacity: 0.7; margin-top: 2px; }
-  .last-update { font-size: 0.78rem; opacity: 0.65; }
+/* KPI ROW */
+.kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; padding:14px 20px 10px; }
+.kpi { background:var(--card); border-radius:10px; padding:13px 15px; box-shadow:var(--shadow); border-top:3px solid var(--green); }
+.kpi.red    { border-top-color:var(--red); }
+.kpi.orange { border-top-color:var(--orange); }
+.kpi.blue   { border-top-color:var(--blue); }
+.kpi.purple { border-top-color:var(--purple); }
+.kpi-label { font-size:0.67rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+.kpi-value { font-size:1.25rem; font-weight:700; line-height:1.2; }
+.kpi-sub   { font-size:0.68rem; color:var(--muted); margin-top:3px; }
 
-  /* NAVIGATION */
-  nav {
-    background: var(--header2);
-    display: flex;
-    gap: 2px;
-    padding: 0 24px;
-  }
-  nav button {
-    background: transparent;
-    color: rgba(255,255,255,0.7);
-    border: none;
-    padding: 10px 20px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
-    font-family: inherit;
-  }
-  nav button:hover { color: white; background: rgba(255,255,255,0.1); }
-  nav button.active { color: white; border-bottom-color: var(--accent); font-weight: 600; }
+/* CHART ROW */
+.row1 { display:grid; grid-template-columns:3fr 2fr; gap:10px; padding:0 20px 10px; }
 
-  /* MAIN */
-  main { padding: 20px 24px; }
+/* BOTTOM ROW */
+.row2 { display:grid; grid-template-columns:5fr 3fr 4fr; gap:10px; padding:0 20px 20px; }
 
-  /* KPI ROW */
-  .kpi-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 14px;
-    margin-bottom: 20px;
-  }
-  .kpi-card {
-    background: var(--card);
-    border-radius: 10px;
-    padding: 16px;
-    box-shadow: var(--shadow);
-    border-left: 4px solid var(--accent);
-  }
-  .kpi-card.red { border-left-color: var(--red); }
-  .kpi-card.orange { border-left-color: var(--accent2); }
-  .kpi-card.blue { border-left-color: #4a90d9; }
-  .kpi-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-  .kpi-value { font-size: 1.5rem; font-weight: 700; color: var(--text); }
-  .kpi-sub { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+/* CARD */
+.card { background:var(--card); border-radius:10px; padding:15px; box-shadow:var(--shadow); }
+.card-title { font-size:0.74rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:11px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.chart-wrap { position:relative; }
 
-  /* CHARTS GRID */
-  .charts-grid {
-    display: grid;
-    gap: 16px;
-  }
-  .charts-grid.two-col { grid-template-columns: 1fr 1fr; }
-  .charts-grid.three-col { grid-template-columns: 2fr 1fr; }
+/* TABLE */
+table { width:100%; border-collapse:collapse; font-size:0.76rem; }
+thead th { background:var(--header); color:#fff; padding:7px 9px; text-align:left; font-size:0.7rem; white-space:nowrap; }
+thead th.r { text-align:right; }
+tbody tr { border-bottom:1px solid #f0ebe4; }
+tbody tr:hover { background:#faf6f0; }
+tbody td { padding:6px 9px; }
+tbody td.r { text-align:right; }
+tfoot td { padding:8px 9px; font-weight:700; border-top:2px solid var(--border); }
+tfoot td.r { text-align:right; }
+.neg { color:var(--red); }
+.pos { color:var(--green); }
 
-  .chart-card {
-    background: var(--card);
-    border-radius: 10px;
-    padding: 18px;
-    box-shadow: var(--shadow);
-  }
-  .chart-card h3 {
-    font-size: 0.85rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-  }
-  .chart-wrapper { position: relative; height: 240px; }
+/* HORIZONTAL BAR */
+.h-bar { display:flex; align-items:center; gap:8px; margin-bottom:7px; }
+.h-bar-label { font-size:0.7rem; width:90px; text-align:right; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.h-bar-track { flex:1; background:#ede8e0; border-radius:4px; height:15px; }
+.h-bar-fill  { height:100%; border-radius:4px; background:var(--red); display:flex; align-items:center; min-width:2px; }
+.h-bar-val   { font-size:0.62rem; color:#fff; font-weight:700; padding-left:5px; white-space:nowrap; }
 
-  /* PROGRESS BAR */
-  .progress-section { margin-top: 10px; }
-  .progress-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.82rem;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-  .progress-bar-outer {
-    background: var(--border);
-    border-radius: 20px;
-    height: 22px;
-    overflow: hidden;
-    margin-bottom: 10px;
-  }
-  .progress-bar-inner {
-    height: 100%;
-    border-radius: 20px;
-    background: linear-gradient(90deg, var(--accent), #4caf50);
-    display: flex;
-    align-items: center;
-    padding-left: 10px;
-    font-size: 0.75rem;
-    color: white;
-    font-weight: 600;
-    transition: width 1s ease;
-  }
+/* GORDA / META */
+.g-block { border-radius:8px; padding:11px 13px; margin-bottom:9px; }
+.g-block.verde  { background:#edf7ed; border-left:3px solid var(--green); }
+.g-block.orange { background:#fff4ec; border-left:3px solid var(--orange); }
+.g-block.blue   { background:#eaf3fb; border-left:3px solid var(--blue); }
+.g-title { font-size:0.67rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.3px; margin-bottom:3px; }
+.g-val   { font-size:1.15rem; font-weight:700; }
+.g-sub   { font-size:0.67rem; color:var(--muted); margin-top:2px; }
+.prog-wrap { margin-top:10px; }
+.prog-label { display:flex; justify-content:space-between; font-size:0.67rem; color:var(--muted); margin-bottom:3px; }
+.prog-track { background:var(--border); border-radius:10px; height:10px; }
+.prog-fill  { background:var(--green); border-radius:10px; height:10px; transition:width .8s ease; }
 
-  /* TABLE */
-  .table-card {
-    background: var(--card);
-    border-radius: 10px;
-    padding: 18px;
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-  .table-card h3 {
-    font-size: 0.85rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .table-filter {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .table-filter input {
-    padding: 6px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 0.82rem;
-    background: var(--bg);
-    color: var(--text);
-    font-family: inherit;
-    flex: 1;
-  }
-  table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
-  thead th {
-    background: var(--header);
-    color: white;
-    padding: 10px 12px;
-    text-align: left;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-  }
-  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-  tbody tr:hover { background: #faf6f0; }
-  tbody td { padding: 9px 12px; }
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.72rem;
-    font-weight: 600;
-  }
-  .badge.green { background: #e6f4e6; color: #2e7d32; }
-  .badge.red { background: #fde8e8; color: #c62828; }
-  .badge.orange { background: #fff3e0; color: #e65100; }
-  .badge.blue { background: #e3f2fd; color: #1565c0; }
+/* LOADING */
+.loading { text-align:center; padding:28px; color:var(--muted); font-size:0.82rem; }
+.spinner { width:26px; height:26px; border:3px solid var(--border); border-top-color:var(--green); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 8px; }
+@keyframes spin { to { transform:rotate(360deg); } }
 
-  .amount-pos { color: #2e7d32; font-weight: 600; }
-  .amount-neg { color: var(--red); font-weight: 600; }
-
-  /* PAGES */
-  .page { display: none; }
-  .page.active { display: block; }
-
-  /* META PAGE */
-  .meta-hero {
-    background: linear-gradient(135deg, var(--header), var(--header2));
-    color: white;
-    border-radius: 12px;
-    padding: 28px;
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  .meta-hero .goal { font-size: 0.9rem; opacity: 0.7; margin-bottom: 6px; }
-  .meta-hero .amount { font-size: 2.8rem; font-weight: 800; }
-  .meta-hero .label { font-size: 0.85rem; opacity: 0.7; margin-top: 4px; }
-
-  .meta-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 20px;
-  }
-
-  /* LOADING */
-  .loading {
-    text-align: center;
-    padding: 40px;
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
-  .spinner {
-    width: 36px; height: 36px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 12px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* RESPONSIVE */
-  @media (max-width: 768px) {
-    .charts-grid.two-col,
-    .charts-grid.three-col,
-    .meta-grid { grid-template-columns: 1fr; }
-    .kpi-row { grid-template-columns: repeat(2, 1fr); }
-  }
+/* RESPONSIVE */
+@media(max-width:960px) {
+  .kpi-row { grid-template-columns:repeat(3,1fr); }
+  .row1, .row2 { grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
@@ -259,433 +103,458 @@
 <div class="top-header">
   <div>
     <h1>💰 Finanças Dashboard</h1>
-    <div class="subtitle">Controle financeiro pessoal</div>
+    <div class="sub">Controle financeiro pessoal</div>
   </div>
-  <div class="last-update" id="lastUpdate">Carregando...</div>
+  <div id="lastUpdate"></div>
 </div>
 
-<nav>
-  <button class="active" onclick="showPage('resumo', this)">📊 Resumo</button>
-  <button onclick="showPage('sab', this)">🏦 Arabia SAB</button>
-  <button onclick="showPage('parcelamentos', this)">💳 Parcelamentos</button>
-  <button onclick="showPage('valeria', this)">👤 Valéria</button>
-  <button onclick="showPage('meta', this)">🎯 Meta €200k</button>
-</nav>
+<div class="controls">
+  <label>MÊS</label>
+  <select id="selMes" onchange="applyFilter()"><option value="">Todos</option></select>
+  <label>ANO</label>
+  <select id="selAno" onchange="applyFilter()"><option value="">Todos</option></select>
+</div>
 
-<main>
+<!-- KPIs -->
+<div class="kpi-row" id="kpiRow">
+  <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>Carregando...</div>
+</div>
 
-  <!-- PAGE 1: RESUMO -->
-  <div class="page active" id="page-resumo">
-    <div class="kpi-row" id="kpi-resumo">
-      <div class="loading"><div class="spinner"></div>Carregando dados...</div>
-    </div>
+<!-- ROW 1: charts -->
+<div class="row1">
+  <div class="card">
+    <div class="card-title">📊 Real vs Orçado — Espanha (EUR)</div>
+    <div class="chart-wrap" style="height:270px"><canvas id="cEspanha"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🇸🇦 Gastos por Categoria — Arabia SAB (SAR)</div>
+    <div class="chart-wrap" style="height:270px"><canvas id="cArabia"></canvas></div>
+  </div>
+</div>
 
-    <div class="charts-grid two-col">
-      <div class="chart-card">
-        <h3>📈 Evolução do Orçamento por Categoria</h3>
-        <div class="chart-wrapper"><canvas id="chartOrcamento"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>🎯 Progresso para Meta €200k</h3>
-        <div class="progress-section" id="progressSection">
-          <div class="loading"><div class="spinner"></div></div>
-        </div>
-      </div>
-    </div>
+<!-- ROW 2: parcelamentos / gorda / ranking -->
+<div class="row2">
+
+  <div class="card">
+    <div class="card-title">💳 Parcelamentos — Próximos Meses (SAR)</div>
+    <div id="parcWrap"><div class="loading"><div class="spinner"></div></div></div>
   </div>
 
-  <!-- PAGE 2: ARABIA SAB -->
-  <div class="page" id="page-sab">
-    <div class="table-card">
-      <h3>🏦 Transações Arabia SAB <span id="sab-count" style="font-size:0.75rem;color:var(--muted)"></span></h3>
-      <div class="table-filter">
-        <input type="text" id="sab-search" placeholder="🔍 Buscar descrição, categoria..." oninput="filterTable('sab')">
-      </div>
-      <div style="overflow-x:auto">
-        <table id="table-sab">
-          <thead><tr>
-            <th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor (SAR)</th><th>Valor (BRL)</th><th>Tipo</th>
-          </tr></thead>
-          <tbody id="tbody-sab"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
+  <div class="card">
+    <div class="card-title">👨‍👩‍👧 Gorda &amp; Meta</div>
+    <div id="gordaWrap"><div class="loading"><div class="spinner"></div></div></div>
   </div>
 
-  <!-- PAGE 3: PARCELAMENTOS -->
-  <div class="page" id="page-parcelamentos">
-    <div class="table-card">
-      <h3>💳 Parcelamentos <span id="parc-count" style="font-size:0.75rem;color:var(--muted)"></span></h3>
-      <div class="table-filter">
-        <input type="text" id="parc-search" placeholder="🔍 Buscar..." oninput="filterTable('parc')">
-      </div>
-      <div style="overflow-x:auto">
-        <table id="table-parc">
-          <thead><tr>
-            <th>Descrição</th><th>Parcela</th><th>Total Parcelas</th><th>Valor Parcela (BRL)</th><th>Valor Total (BRL)</th><th>Status</th>
-          </tr></thead>
-          <tbody id="tbody-parc"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
+  <div class="card">
+    <div class="card-title">📉 Maiores Despesas (mês selecionado)</div>
+    <div id="rankingWrap"><div class="loading"><div class="spinner"></div></div></div>
   </div>
 
-  <!-- PAGE 4: VALERIA -->
-  <div class="page" id="page-valeria">
-    <div class="table-card">
-      <h3>👤 Valéria — Repasses e Descontos</h3>
-      <div style="overflow-x:auto">
-        <table id="table-valeria">
-          <thead><tr>
-            <th>Descrição</th><th>Tipo</th><th>Parcela Atual</th><th>Valor (BRL)</th>
-          </tr></thead>
-          <tbody id="tbody-valeria"><tr><td colspan="4" class="loading"><div class="spinner"></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAGE 5: META -->
-  <div class="page" id="page-meta">
-    <div class="meta-hero">
-      <div class="goal">🎯 Meta de Poupança</div>
-      <div class="amount" id="meta-poupanca">€ —</div>
-      <div class="label">Saldo Poupança Atual (EUR)</div>
-    </div>
-
-    <div class="meta-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Meta Total</div>
-        <div class="kpi-value">€ 200.000</div>
-        <div class="kpi-sub">Objetivo</div>
-      </div>
-      <div class="kpi-card red">
-        <div class="kpi-label">Falta para Meta</div>
-        <div class="kpi-value" id="meta-falta">€ —</div>
-        <div class="kpi-sub">Valor restante</div>
-      </div>
-      <div class="kpi-card orange">
-        <div class="kpi-label">Saldo Orçado do Mês</div>
-        <div class="kpi-value" id="meta-orc">€ —</div>
-        <div class="kpi-sub">Receita - Despesas</div>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <h3>📊 Progresso para Meta €200k</h3>
-      <div class="progress-section">
-        <div class="progress-label">
-          <span>€ 0</span>
-          <span id="meta-pct-label">0%</span>
-          <span>€ 200.000</span>
-        </div>
-        <div class="progress-bar-outer">
-          <div class="progress-bar-inner" id="meta-bar" style="width:0%">0%</div>
-        </div>
-        <div style="text-align:center;margin-top:12px;font-size:0.85rem;color:var(--muted)" id="meta-meses"></div>
-      </div>
-    </div>
-  </div>
-
-</main>
+</div>
 
 <script>
 const SHEET_ID = '1xEagjesBVqfq9YjjmbS56X6YzeU_ajDHxZyP7D_y9X4';
+const MESES_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const _charts = {};
 
-// Fetch a sheet as JSON via gviz
-async function fetchSheet(sheetName) {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+// ─── UTILS ────────────────────────────────────────────────────
+async function fetchSheet(name) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}`;
   const res = await fetch(url);
-  const text = await res.text();
-  const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-  return json.table;
-}
-
-function tableToObjects(table) {
-  const headers = table.cols.map(c => c.label || c.id);
-  return table.rows.map(row => {
-    const obj = {};
-    row.c.forEach((cell, i) => {
-      obj[headers[i]] = cell ? cell.v : null;
-    });
-    return obj;
+  const txt = await res.text();
+  const data = JSON.parse(txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+  const tbl = data.table;
+  const hdrs = tbl.cols.map(c => c.label || c.id);
+  return tbl.rows.map(row => {
+    const o = {};
+    row.c.forEach((cell, i) => { o[hdrs[i]] = cell ? cell.v : null; });
+    return o;
   });
 }
 
-function fmt(n, decimals = 2) {
-  if (n == null || isNaN(n)) return '—';
-  return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+function parseDate(v) {
+  if (!v) return null;
+  const m = String(v).match(/Date\((\d+),(\d+),(\d+)\)/);
+  if (m) return new Date(+m[1], +m[2], +m[3]);
+  if (typeof v === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
+    const [d, mo, y] = v.split('/');
+    return new Date(+y, +mo - 1, +d);
+  }
+  return null;
 }
 
 function fmtDate(v) {
-  if (!v) return '—';
-  if (typeof v === 'string') return v;
-  // gviz date format: Date(year,month,day)
-  if (typeof v === 'object' && v !== null) {
-    try {
-      const m = String(v).match(/Date\((\d+),(\d+),(\d+)\)/);
-      if (m) {
-        const d = new Date(+m[1], +m[2], +m[3]);
-        return d.toLocaleDateString('pt-BR');
-      }
-    } catch(e) {}
-  }
-  return String(v);
+  const d = parseDate(v);
+  return d ? d.toLocaleDateString('pt-BR') : '—';
 }
 
-// ---- PAGE 1: RESUMO ----
-async function loadResumo() {
-  try {
-    const table = await fetchSheet('Resumo');
-    const rows = tableToObjects(table);
-    const d = rows[0] || {};
+function fmt(n, dec = 2) {
+  if (n == null || isNaN(+n)) return '—';
+  return (+n).toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
 
-    const poupanca = d['Saldo_Poupanca_EUR'] || 0;
-    const falta = d['Falta_Meta_EUR'] || 0;
-    const saldoOrc = d['Saldo_EUR_Orc'] || 0;
-    const arabiaEur = d['Arabia_EUR_Orc'] || 0;
-    const arabiaSar = d['Arabia_SAR_Orc'] || 0;
-    const espanha = d['Espanha_EUR_Orc'] || 0;
-    const gordaBRL = d['GordaBrasil_BRL_Orc'] || 0;
-    const gordaEUR = d['GordaBrasil_EUR_Orc'] || 0;
-    const dataAtt = d['Data_Atualizacao'];
+function mkChart(id, config) {
+  if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
+  const el = document.getElementById(id);
+  if (el) _charts[id] = new Chart(el, config);
+}
 
-    if (dataAtt) {
-      document.getElementById('lastUpdate').textContent = 'Atualizado: ' + fmtDate(dataAtt);
-    }
+// ─── GLOBAL DATA ──────────────────────────────────────────────
+let allTrans = [], allOrc = [], allParc = [], resumo = {};
 
-    document.getElementById('kpi-resumo').innerHTML = `
-      <div class="kpi-card">
-        <div class="kpi-label">💰 Poupança (EUR)</div>
-        <div class="kpi-value">€ ${fmt(poupanca, 0)}</div>
-        <div class="kpi-sub">Saldo atual</div>
-      </div>
-      <div class="kpi-card red">
-        <div class="kpi-label">🎯 Falta para Meta</div>
-        <div class="kpi-value">€ ${fmt(falta, 0)}</div>
-        <div class="kpi-sub">de € 200.000</div>
-      </div>
-      <div class="kpi-card orange">
-        <div class="kpi-label">📊 Saldo Orçado</div>
-        <div class="kpi-value">€ ${fmt(saldoOrc)}</div>
-        <div class="kpi-sub">Este mês</div>
-      </div>
-      <div class="kpi-card blue">
-        <div class="kpi-label">🏦 Arabia (EUR)</div>
-        <div class="kpi-value">€ ${fmt(arabiaEur)}</div>
-        <div class="kpi-sub">${fmt(arabiaSar, 0)} SAR</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">🇪🇸 Espanha (EUR)</div>
-        <div class="kpi-value">€ ${fmt(espanha)}</div>
-        <div class="kpi-sub">Orçamento</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">🇧🇷 Brasil (BRL)</div>
-        <div class="kpi-value">R$ ${fmt(gordaBRL, 0)}</div>
-        <div class="kpi-sub">≈ € ${fmt(gordaEUR)}</div>
-      </div>
-    `;
+// ─── FILTER ───────────────────────────────────────────────────
+function filtered() {
+  const mes = document.getElementById('selMes').value;
+  const ano = document.getElementById('selAno').value;
+  return allTrans.filter(t => {
+    const d = parseDate(t['Data']);
+    if (!d) return false;
+    if (ano && d.getFullYear() !== +ano) return false;
+    if (mes !== '' && d.getMonth() !== +mes) return false;
+    return true;
+  });
+}
 
-    // Progress bar
-    const pct = Math.min((poupanca / 200000) * 100, 100);
-    const mesesRestantes = saldoOrc > 0 ? Math.ceil(falta / saldoOrc) : null;
-    document.getElementById('progressSection').innerHTML = `
-      <div style="margin-bottom:16px">
-        <div class="progress-label">
-          <span>€ 0</span>
-          <span>${fmt(pct, 1)}%</span>
-          <span>€ 200.000</span>
-        </div>
-        <div class="progress-bar-outer">
-          <div class="progress-bar-inner" style="width:${pct}%">${fmt(pct,1)}%</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
-        <div style="text-align:center;background:var(--bg);border-radius:8px;padding:14px">
-          <div style="font-size:1.4rem;font-weight:700;color:var(--accent)">€ ${fmt(poupanca, 0)}</div>
-          <div style="font-size:0.75rem;color:var(--muted);margin-top:4px">Poupado</div>
-        </div>
-        <div style="text-align:center;background:var(--bg);border-radius:8px;padding:14px">
-          <div style="font-size:1.4rem;font-weight:700;color:var(--red)">€ ${fmt(falta, 0)}</div>
-          <div style="font-size:0.75rem;color:var(--muted);margin-top:4px">Falta</div>
-        </div>
-      </div>
-      ${mesesRestantes ? `<div style="text-align:center;margin-top:14px;font-size:0.85rem;color:var(--muted)">
-        Estimativa: <strong>${mesesRestantes} meses</strong> para atingir a meta (poupando € ${fmt(saldoOrc)}/mês)
-      </div>` : ''}
-    `;
+// ─── BUILD SELECTORS ──────────────────────────────────────────
+function buildSelectors() {
+  const set = new Set();
+  const years = new Set();
+  allTrans.forEach(t => {
+    const d = parseDate(t['Data']);
+    if (!d) return;
+    set.add(`${d.getMonth()}_${d.getFullYear()}`);
+    years.add(d.getFullYear());
+  });
 
-    // Chart: categorias
-    const labels = ['Arabia (EUR)', 'Espanha (EUR)', 'Brasil (EUR)'];
-    const values = [arabiaEur, espanha, gordaEUR];
-    new Chart(document.getElementById('chartOrcamento'), {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Orçamento (EUR)',
-          data: values,
-          backgroundColor: ['#6aaa64', '#e07b39', '#4a90d9'],
-          borderRadius: 6,
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { grid: { color: '#e8e0d5' }, ticks: { callback: v => '€ ' + fmt(v, 0) } },
-          x: { grid: { display: false } }
-        }
+  const sorted = [...set].sort((a, b) => {
+    const [am, ay] = a.split('_').map(Number);
+    const [bm, by] = b.split('_').map(Number);
+    return ay !== by ? ay - by : am - bm;
+  });
+
+  const sm = document.getElementById('selMes');
+  const sa = document.getElementById('selAno');
+
+  sm.innerHTML = '<option value="">Todos</option>';
+  sorted.forEach(k => {
+    const [m, y] = k.split('_').map(Number);
+    const o = new Option(`${MESES_PT[m]} ${y}`, m);
+    sm.appendChild(o);
+  });
+
+  sa.innerHTML = '<option value="">Todos</option>';
+  [...years].sort().forEach(y => sa.appendChild(new Option(y, y)));
+
+  // Default: most recent month
+  if (sorted.length) {
+    const [lm, ly] = sorted[sorted.length - 1].split('_').map(Number);
+    sm.value = lm;
+    sa.value = ly;
+  }
+}
+
+// ─── KPIs ─────────────────────────────────────────────────────
+function renderKPIs(trans) {
+  // Total Cartão: acumulado até hoje (todos os meses)
+  const hoje = new Date();
+  const totalCartao = allTrans
+    .filter(t => {
+      const d = parseDate(t['Data']);
+      const v = parseFloat(t['Valor'] || 0);
+      const conta = (t['Pais/Conta'] || t['Tipo'] || '').toLowerCase();
+      return d && d <= hoje && v < 0 && conta.includes('cartao');
+    })
+    .reduce((s, t) => s + Math.abs(parseFloat(t['Valor'] || 0)), 0);
+
+  // Total Arabia (SAR expenses no mês)
+  const totalArabia = trans
+    .filter(t => parseFloat(t['Valor'] || 0) < 0 && (t['Moeda'] === 'SAR'))
+    .reduce((s, t) => s + Math.abs(parseFloat(t['Valor'] || 0)), 0);
+
+  // Total Espanha (EUR expenses no mês)
+  const totalEspanha = trans
+    .filter(t => {
+      const v = parseFloat(t['Valor'] || 0);
+      const conta = (t['Pais/Conta'] || '').toLowerCase();
+      return v < 0 && (t['Moeda'] === 'EUR' || conta.includes('espanha') || conta.includes('bbva'));
+    })
+    .reduce((s, t) => s + Math.abs(parseFloat(t['Valor'] || 0)), 0);
+
+  const saldoOrc  = resumo['Saldo_EUR_Orc']      || 0;
+  const poupanca  = resumo['Saldo_Poupanca_EUR']  || 0;
+
+  // Próximo mês: receita orçada - despesas orçadas mensais
+  const recOrc = allOrc
+    .filter(o => (o['Grupo'] || '').toLowerCase().includes('receita') && o['Ativo'] !== 'Não')
+    .reduce((s, o) => s + Math.abs(parseFloat(o['Valor'] || 0)), 0);
+  const despOrc = allOrc
+    .filter(o => {
+      const g = (o['Grupo'] || '').toLowerCase();
+      const p = (o['Periodicidade'] || '').toLowerCase();
+      return !g.includes('receita') && o['Ativo'] !== 'Não' && p === 'mensal';
+    })
+    .reduce((s, o) => s + Math.abs(parseFloat(o['Valor'] || 0)), 0);
+  const proxMes = recOrc > 0 ? recOrc - despOrc : null;
+
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi blue">
+      <div class="kpi-label">💳 Total Cartão SAB</div>
+      <div class="kpi-value">${fmt(totalCartao, 0)} SAR</div>
+      <div class="kpi-sub">Acumulado até hoje</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-label">🇸🇦 Total Arabia SAB</div>
+      <div class="kpi-value">${fmt(totalArabia, 0)} SAR</div>
+      <div class="kpi-sub">Mês selecionado</div>
+    </div>
+    <div class="kpi orange">
+      <div class="kpi-label">🇪🇸 Total Espanha</div>
+      <div class="kpi-value">€ ${fmt(totalEspanha, 0)}</div>
+      <div class="kpi-sub">Mês selecionado</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">📈 Para Investir (Atual)</div>
+      <div class="kpi-value">€ ${fmt(saldoOrc)}</div>
+      <div class="kpi-sub">Após todas deduções</div>
+    </div>
+    <div class="kpi purple">
+      <div class="kpi-label">📅 Para Investir (Próx. Mês)</div>
+      <div class="kpi-value">${proxMes != null ? '€ ' + fmt(proxMes, 0) : '—'}</div>
+      <div class="kpi-sub">Projeção orçamento</div>
+    </div>
+  `;
+}
+
+// ─── CHART: REAL VS ORÇADO ESPANHA ────────────────────────────
+function renderEspanha(trans) {
+  const realMap = {};
+  trans.filter(t => {
+    const v = parseFloat(t['Valor'] || 0);
+    const conta = (t['Pais/Conta'] || '').toLowerCase();
+    return v < 0 && (t['Moeda'] === 'EUR' || conta.includes('espanha') || conta.includes('bbva'));
+  }).forEach(t => {
+    const cat = t['Categoria'] || 'Outros';
+    realMap[cat] = (realMap[cat] || 0) + Math.abs(parseFloat(t['Valor'] || 0));
+  });
+
+  const orcMap = {};
+  allOrc.filter(o => {
+    const g = (o['Grupo'] || '').toLowerCase();
+    const m = (o['Moeda'] || '').toUpperCase();
+    return (g.includes('espanha') || m === 'EUR') && !g.includes('receita') && o['Ativo'] !== 'Não';
+  }).forEach(o => {
+    const cat = o['Descricao'] || 'Outros';
+    orcMap[cat] = (orcMap[cat] || 0) + Math.abs(parseFloat(o['Valor'] || 0));
+  });
+
+  const cats = [...new Set([...Object.keys(realMap), ...Object.keys(orcMap)])].sort();
+  mkChart('cEspanha', {
+    type: 'bar',
+    data: {
+      labels: cats,
+      datasets: [
+        { label: 'Real (€)', data: cats.map(c => realMap[c] || 0), backgroundColor: 'rgba(192,57,43,0.75)', borderRadius: 4 },
+        { label: 'Orçado (€)', data: cats.map(c => orcMap[c] || 0), backgroundColor: 'rgba(106,170,100,0.65)', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 40 } },
+        y: { grid: { color: '#eee' }, ticks: { callback: v => '€' + fmt(v, 0) } }
       }
+    }
+  });
+}
+
+// ─── CHART: ARABIA CATEGORIES ─────────────────────────────────
+function renderArabia(trans) {
+  const map = {};
+  trans.filter(t => parseFloat(t['Valor'] || 0) < 0 && t['Moeda'] === 'SAR')
+    .forEach(t => {
+      const cat = t['Categoria'] || 'Outros';
+      map[cat] = (map[cat] || 0) + Math.abs(parseFloat(t['Valor'] || 0));
     });
 
-    // Also populate meta page
-    document.getElementById('meta-poupanca').textContent = '€ ' + fmt(poupanca, 0);
-    document.getElementById('meta-falta').textContent = '€ ' + fmt(falta, 0);
-    document.getElementById('meta-orc').textContent = '€ ' + fmt(saldoOrc);
-    document.getElementById('meta-pct-label').textContent = fmt(pct, 1) + '%';
-    document.getElementById('meta-bar').style.width = pct + '%';
-    document.getElementById('meta-bar').textContent = fmt(pct, 1) + '%';
-    if (mesesRestantes) {
-      document.getElementById('meta-meses').textContent =
-        `Estimativa: ${mesesRestantes} meses para atingir a meta (poupando € ${fmt(saldoOrc)}/mês)`;
+  const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  const pal = ['#e07b39','#2980b9','#6aaa64','#c0392b','#8e44ad','#f39c12','#1abc9c','#e67e22','#3498db','#27ae60','#e74c3c','#9b59b6'];
+
+  mkChart('cArabia', {
+    type: 'bar',
+    data: {
+      labels: sorted.map(([k]) => k),
+      datasets: [{ label: 'SAR', data: sorted.map(([,v]) => v), backgroundColor: pal, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 45 } },
+        y: { grid: { color: '#eee' }, ticks: { callback: v => fmt(v, 0) } }
+      }
     }
-
-  } catch(e) {
-    console.error('Erro Resumo:', e);
-    document.getElementById('kpi-resumo').innerHTML =
-      `<div style="color:var(--red);padding:20px">Erro ao carregar dados. Verifique se a planilha está pública.<br><small>${e.message}</small></div>`;
-  }
+  });
 }
 
-// ---- PAGE 2: ARABIA SAB ----
-let sabData = [];
-async function loadSAB() {
-  try {
-    const table = await fetchSheet('Transacoes');
-    sabData = tableToObjects(table);
-    renderSAB(sabData);
-  } catch(e) {
-    document.getElementById('tbody-sab').innerHTML =
-      `<tr><td colspan="6" style="color:var(--red);padding:20px">Erro: ${e.message}</td></tr>`;
+// ─── PARCELAMENTOS TIMELINE ────────────────────────────────────
+function renderParc() {
+  const active = allParc.filter(p => p['Ativo'] === 'Sim');
+  if (!active.length) {
+    document.getElementById('parcWrap').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Nenhum parcelamento ativo</div>';
+    return;
   }
-}
 
-function renderSAB(data) {
-  document.getElementById('sab-count').textContent = `(${data.length} registros)`;
-  const tbody = document.getElementById('tbody-sab');
-  if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Nenhum registro</td></tr>'; return; }
+  const now = new Date();
+  const cols = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    cols.push({ label: `${MESES_PT[d.getMonth()]}/${String(d.getFullYear()).slice(2)}` });
+  }
 
-  tbody.innerHTML = data.map(r => {
-    const valorSAR = parseFloat(r['Valor_SAR'] || r['Valor'] || 0);
-    const valorBRL = parseFloat(r['Valor_BRL'] || 0);
-    const tipo = r['Tipo'] || r['tipo'] || '';
-    const categoria = r['Categoria'] || r['categoria'] || '—';
-    const badgeClass = tipo.toLowerCase().includes('receita') ? 'green' : tipo.toLowerCase().includes('despesa') ? 'red' : 'blue';
-    const amtClass = valorBRL >= 0 ? 'amount-pos' : 'amount-neg';
+  const totals = new Array(6).fill(0);
+
+  const rows = active.map(p => {
+    const val   = parseFloat(p['Valor_SAR'] || 0);
+    const atual = parseInt(p['Parcela_Atual'] || 1);
+    const total = parseInt(p['Total_Parcelas'] || 1);
+    const left  = total - atual + 1;
+
+    const cells = cols.map((_, i) => {
+      if (i < left) { totals[i] += val; return `<td class="r neg">${fmt(val, 0)}</td>`; }
+      return `<td class="r" style="color:var(--muted)">—</td>`;
+    });
+
     return `<tr>
-      <td>${fmtDate(r['Data'] || r['data'])}</td>
-      <td>${r['Descricao'] || r['Descrição'] || r['descricao'] || '—'}</td>
-      <td><span class="badge ${badgeClass === 'blue' ? 'blue' : ''}">${categoria}</span></td>
-      <td class="${amtClass}">${fmt(valorSAR)} SAR</td>
-      <td class="${amtClass}">R$ ${fmt(valorBRL)}</td>
-      <td><span class="badge ${badgeClass}">${tipo}</span></td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p['Descricao']||''}">${p['Descricao']||'—'}</td>
+      <td class="r">${atual}/${total}</td>
+      ${cells.join('')}
     </tr>`;
+  }).join('');
+
+  document.getElementById('parcWrap').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Item</th><th class="r">Parc.</th>
+        ${cols.map(c => `<th class="r">${c.label}</th>`).join('')}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr>
+        <td colspan="2">Total SAR</td>
+        ${totals.map(t => `<td class="r neg">${fmt(t, 0)}</td>`).join('')}
+      </tr></tfoot>
+    </table>`;
+}
+
+// ─── GORDA & META ──────────────────────────────────────────────
+function renderGorda() {
+  const gordaBRL  = resumo['GordaBrasil_BRL_Orc']  || 0;
+  const gordaEUR  = resumo['GordaBrasil_EUR_Orc']  || 0;
+  const espEUR    = resumo['Espanha_EUR_Orc']       || 0;
+  const poupanca  = resumo['Saldo_Poupanca_EUR']    || 0;
+  const falta     = resumo['Falta_Meta_EUR']        || 0;
+  const pct       = Math.min((poupanca / 200000) * 100, 100);
+
+  document.getElementById('gordaWrap').innerHTML = `
+    <div class="g-block verde">
+      <div class="g-title">🇪🇸 Espanha (EUR)</div>
+      <div class="g-val">€ ${fmt(espEUR)}</div>
+      <div class="g-sub">Orçamento mensal</div>
+    </div>
+    <div class="g-block orange">
+      <div class="g-title">🇧🇷 Gorda Brasil (BRL)</div>
+      <div class="g-val">R$ ${fmt(gordaBRL, 0)}</div>
+      <div class="g-sub">≈ € ${fmt(gordaEUR)}</div>
+    </div>
+    <div class="g-block blue">
+      <div class="g-title">💰 Poupança Atual</div>
+      <div class="g-val">€ ${fmt(poupanca, 0)}</div>
+      <div class="g-sub">Falta € ${fmt(falta, 0)}</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-label">
+        <span>Meta €200k</span>
+        <span>${fmt(pct, 1)}%</span>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+}
+
+// ─── RANKING ──────────────────────────────────────────────────
+function renderRanking(trans) {
+  const map = {};
+  const moedaMap = {};
+  trans.filter(t => parseFloat(t['Valor'] || 0) < 0).forEach(t => {
+    const cat = t['Categoria'] || 'Outros';
+    const val = Math.abs(parseFloat(t['Valor'] || 0));
+    map[cat] = (map[cat] || 0) + val;
+    if (!moedaMap[cat]) moedaMap[cat] = t['Moeda'] || 'SAR';
+  });
+
+  const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  if (!sorted.length) {
+    document.getElementById('rankingWrap').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">Sem dados</div>';
+    return;
+  }
+
+  const max = sorted[0][1];
+  document.getElementById('rankingWrap').innerHTML = sorted.map(([cat, val]) => {
+    const pct = (val / max) * 100;
+    const m   = moedaMap[cat] || 'SAR';
+    const lbl = m === 'EUR' ? `€ ${fmt(val, 0)}` : `${fmt(val, 0)} SAR`;
+    return `<div class="h-bar">
+      <div class="h-bar-label" title="${cat}">${cat}</div>
+      <div class="h-bar-track">
+        <div class="h-bar-fill" style="width:${pct}%">
+          <span class="h-bar-val">${lbl}</span>
+        </div>
+      </div>
+    </div>`;
   }).join('');
 }
 
-function filterTable(type) {
-  if (type === 'sab') {
-    const q = document.getElementById('sab-search').value.toLowerCase();
-    const filtered = sabData.filter(r =>
-      Object.values(r).some(v => v && String(v).toLowerCase().includes(q))
-    );
-    renderSAB(filtered);
-  } else if (type === 'parc') {
-    const q = document.getElementById('parc-search').value.toLowerCase();
-    const filtered = parcData.filter(r =>
-      Object.values(r).some(v => v && String(v).toLowerCase().includes(q))
-    );
-    renderParc(filtered);
-  }
+// ─── APPLY FILTER ──────────────────────────────────────────────
+function applyFilter() {
+  const trans = filtered();
+  renderKPIs(trans);
+  renderEspanha(trans);
+  renderArabia(trans);
+  renderRanking(trans);
 }
 
-// ---- PAGE 3: PARCELAMENTOS ----
-let parcData = [];
-async function loadParcelamentos() {
+// ─── INIT ──────────────────────────────────────────────────────
+async function init() {
   try {
-    const table = await fetchSheet('Parcelamentos');
-    parcData = tableToObjects(table);
-    renderParc(parcData);
+    [allTrans, allOrc, allParc] = await Promise.all([
+      fetchSheet('Transacoes'),
+      fetchSheet('Orcamento'),
+      fetchSheet('Parcelamentos')
+    ]);
+    const resumoRows = await fetchSheet('Resumo');
+    resumo = resumoRows[0] || {};
+
+    const att = resumo['Data_Atualizacao'];
+    if (att) document.getElementById('lastUpdate').textContent = 'Atualizado: ' + fmtDate(att);
+
+    buildSelectors();
+    applyFilter();
+    renderParc();
+    renderGorda();
+
   } catch(e) {
-    document.getElementById('tbody-parc').innerHTML =
-      `<tr><td colspan="6" style="color:var(--red);padding:20px">Erro: ${e.message}</td></tr>`;
+    console.error(e);
+    document.getElementById('kpiRow').innerHTML =
+      `<div style="color:var(--red);padding:20px;grid-column:1/-1">
+        ❌ Erro ao carregar dados.<br>
+        <small>Verifique se a planilha está pública (Compartilhar → Qualquer pessoa com o link).</small><br>
+        <small style="opacity:.7">${e.message}</small>
+      </div>`;
   }
 }
 
-function renderParc(data) {
-  document.getElementById('parc-count').textContent = `(${data.length} registros)`;
-  const tbody = document.getElementById('tbody-parc');
-  if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Nenhum registro</td></tr>'; return; }
-
-  tbody.innerHTML = data.map(r => {
-    const parcAtual = r['Parcela_Atual'] || r['parcela_atual'] || '—';
-    const totalParc = r['Total_Parcelas'] || r['total_parcelas'] || '—';
-    const valorParc = parseFloat(r['Valor_Parcela'] || r['valor_parcela'] || r['Valor_BRL'] || 0);
-    const valorTotal = parseFloat(r['Valor_Total'] || r['valor_total'] || 0);
-    const status = r['Status'] || r['status'] || 'Ativo';
-    const badgeClass = status.toLowerCase().includes('pago') ? 'green' : status.toLowerCase().includes('cancel') ? 'red' : 'orange';
-    return `<tr>
-      <td>${r['Descricao'] || r['Descrição'] || r['descricao'] || '—'}</td>
-      <td>${parcAtual}</td>
-      <td>${totalParc}</td>
-      <td class="amount-neg">R$ ${fmt(valorParc)}</td>
-      <td class="amount-neg">R$ ${fmt(valorTotal)}</td>
-      <td><span class="badge ${badgeClass}">${status}</span></td>
-    </tr>`;
-  }).join('');
-}
-
-// ---- PAGE 4: VALERIA ----
-async function loadValeria() {
-  try {
-    const table = await fetchSheet('Valeria');
-    const data = tableToObjects(table);
-    const tbody = document.getElementById('tbody-valeria');
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted)">Nenhum registro</td></tr>'; return; }
-
-    tbody.innerHTML = data.map(r => {
-      const tipo = r['Tipo'] || r['tipo'] || '—';
-      const valor = parseFloat(r['Valor_BRL'] || r['valor_brl'] || 0);
-      const badgeClass = tipo.toLowerCase().includes('repasse') ? 'green' : 'orange';
-      const amtClass = tipo.toLowerCase().includes('repasse') ? 'amount-pos' : 'amount-neg';
-      return `<tr>
-        <td>${r['Descricao'] || r['Descrição'] || '—'}</td>
-        <td><span class="badge ${badgeClass}">${tipo}</span></td>
-        <td>${r['Parcela_Atual'] || '—'}</td>
-        <td class="${amtClass}">R$ ${fmt(valor)}</td>
-      </tr>`;
-    }).join('');
-  } catch(e) {
-    document.getElementById('tbody-valeria').innerHTML =
-      `<tr><td colspan="4" style="color:var(--red);padding:20px">Erro: ${e.message}</td></tr>`;
-  }
-}
-
-// ---- NAVIGATION ----
-function showPage(id, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  btn.classList.add('active');
-}
-
-// ---- INIT ----
-loadResumo();
-loadSAB();
-loadParcelamentos();
-loadValeria();
+init();
 </script>
 </body>
 </html>
