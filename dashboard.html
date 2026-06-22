@@ -198,49 +198,54 @@ function filtered() {
 
 // ── KPIs ──────────────────────────────────────────────────────────────────────
 function renderKPIs(trans) {
-  // 1. Total Expenses Saudi Arabia — acumulado até hoje (SAR, tipo Cartao Credito)
-  const totSAR = allTrans
-    .filter(t => t['Tipo']==='Cartao Credito')
-    .reduce((s,t) => s+Math.abs(v(t)), 0);
+  const taxa_sar = resumo['Taxa_EUR_SAR'] || 4.3008;
 
-  // 2. Total Expenses Spain — acumulado (EUR negativos = despesas BBVA)
-  const totEUR = allTrans
+  // 1. Arabia SAR — soma LÍQUIDA (créditos/reversões de parcelamentos cancelam a compra original)
+  const totSAR = Math.abs(trans
+    .filter(t => t['Tipo']==='Cartao Credito')
+    .reduce((s,t) => s+v(t), 0));
+
+  // 2. Total Espanha EUR — soma de despesas BBVA do mês selecionado
+  const totEUR = trans
     .filter(t => t['Pais/Conta']==='Espanha' && v(t)<0)
     .reduce((s,t) => s+Math.abs(v(t)), 0);
 
-  // 3. Balance Spain Atual = Saldo_EUR_Orc do Resumo
-  //    (Salário - despesas mensais orcadas, calculado pelo script Python)
-  const saldoAtual = resumo['Saldo_EUR_Orc'] || 0;
+  // ── Orçamento EUR (Arabia é auto-financiada em SAR, não entra aqui) ──
+  const salarioEUR  = resumo['Receita_Salario_EUR'] || allOrc.filter(o=>o['Grupo']==='Receita'&&o['Descricao']==='Salario EUR').reduce((s,o)=>s+Math.abs(parseFloat(o['Valor']||0)),0);
+  const gordaEspEUR = resumo['GordaEspanha_EUR_Orc'] || 0;
+  const gordaBraEUR = resumo['GordaBrasil_EUR_Orc']  || 0;
+  const pensaoEUR   = resumo['PensaoEnzo_EUR_Orc']   || 0;
+  const valiEUR     = resumo['Valeria_Net_EUR']       || 0;
+  const espOrcEUR   = resumo['Espanha_EUR_Orc']       || allOrc.filter(o=>o['Grupo']==='Espanha'&&o['Moeda']==='EUR').reduce((s,o)=>s+Math.abs(parseFloat(o['Valor']||0)),0);
+  const parcSAR     = allParc.filter(p=>p['Ativo']==='Sim').reduce((s,p)=>s+Math.abs(parseFloat(p['Valor_SAR']||0)),0);
+  const parcEUR     = parcSAR / taxa_sar;
 
-  // 4. Balance Spain Próximo Mês = Receita EUR - Despesas EUR (Espanha + Gorda, mensais)
-  const recEUR = allOrc
-    .filter(o => o['Grupo']==='Receita' && o['Moeda']==='EUR')
-    .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
-  const despEUR = allOrc
-    .filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR')
-    .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
-  const saldoProx = recEUR>0 ? recEUR-despEUR : null;
+  // 3. Saldo atual = Salário − GordaEspanha − Espanha real − PensaoEnzo − Valeria − GordaBrasil
+  const saldoAtual = salarioEUR - gordaEspEUR - totEUR - pensaoEUR - valiEUR - gordaBraEUR;
+
+  // 4. Próximo mês = Salário − GordaEspanha − Espanha orçado − PensaoEnzo − Valeria − GordaBrasil − Parcelamentos
+  const saldoProx = salarioEUR - gordaEspEUR - espOrcEUR - pensaoEUR - valiEUR - gordaBraEUR - parcEUR;
 
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi red">
-      <div class="kpi-lbl">🇸🇦 Total Expenses<br>Saudi Arabia (até o momento)</div>
+      <div class="kpi-lbl">🇸🇦 Total Expenses<br>Saudi Arabia (mês atual)</div>
       <div class="kpi-val">${fmt(totSAR,0)} SAR</div>
-      <div class="kpi-sub">Acumulado cartão SAB (ciclo atual)</div>
+      <div class="kpi-sub">Ciclo SAB — líquido (excl. parcelamentos)</div>
     </div>
     <div class="kpi orange">
       <div class="kpi-lbl">🇪🇸 Total Expenses<br>Spain (até o momento)</div>
-      <div class="kpi-val">€ ${fmt(totEUR,0)}</div>
-      <div class="kpi-sub">Acumulado BBVA (mês corrente)</div>
+      <div class="kpi-val">€ ${fmt(totEUR,2)}</div>
+      <div class="kpi-sub">BBVA — despesas do mês</div>
     </div>
     <div class="kpi green">
       <div class="kpi-lbl">💶 Total Balance Spain<br>(mês atual)</div>
-      <div class="kpi-val">€ ${fmt(saldoAtual)}</div>
-      <div class="kpi-sub">Salário − despesas EUR orçadas</div>
+      <div class="kpi-val">€ ${fmt(saldoAtual,2)}</div>
+      <div class="kpi-sub">Salário − GordaEsp − Espanha real − Pensão − Valeria − GordaBra</div>
     </div>
     <div class="kpi purple">
       <div class="kpi-lbl">📅 Total Balance Spain<br>(próximo mês)</div>
-      <div class="kpi-val">${saldoProx!=null ? '€ '+fmt(saldoProx,0) : '—'}</div>
-      <div class="kpi-sub">Projeção: receita EUR − despesas orçadas</div>
+      <div class="kpi-val">€ ${fmt(saldoProx,2)}</div>
+      <div class="kpi-sub">Salário − GordaEsp − Esp.orc − Pensão − Valeria − GordaBra − Parc.</div>
     </div>`;
 }
 
@@ -321,10 +326,10 @@ function renderArabia(trans) {
     .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
   if (salSAR) planMap['Salário SAR'] = salSAR;
 
-  // ─ Real ─
+  // ─ Real ─ (apenas despesas; créditos/reversões de parcelamentos excluídos)
   const realMap = {};
   trans
-    .filter(t => (t['Pais/Conta']||'').includes('Arabia') || t['Moeda']==='SAR')
+    .filter(t => ((t['Pais/Conta']||'').includes('Arabia') || t['Moeda']==='SAR') && v(t) < 0)
     .forEach(t => {
       const cat = t['Categoria']||'Outros';
       realMap[cat] = (realMap[cat]||0) + Math.abs(v(t));
@@ -441,8 +446,9 @@ function renderInvest() {
 // ── ARABIA REAL — barras horizontais ─────────────────────────────────────────
 function renderArabReal(trans) {
   const map = {};
+  // Apenas despesas (v < 0); créditos/reversões de parcelamentos excluídos
   trans
-    .filter(t => ((t['Pais/Conta']||'').includes('Arabia')||t['Moeda']==='SAR') && Math.abs(v(t))>0)
+    .filter(t => ((t['Pais/Conta']||'').includes('Arabia')||t['Moeda']==='SAR') && v(t) < 0)
     .forEach(t => {
       const cat = t['Categoria']||'Outros';
       map[cat] = (map[cat]||0) + Math.abs(v(t));
