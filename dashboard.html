@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinanÃ§as Dashboard</title>
+<title>Finanças Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -27,7 +27,7 @@ header .sub { font-size:0.7rem; opacity:.55; }
 .ctrl select { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:5px; padding:4px 10px; font-size:.78rem; cursor:pointer; }
 .ctrl select option { background:var(--bar); }
 
-/* KPIs â 4 colunas */
+/* KPIs — 4 colunas */
 .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:12px 20px 8px; }
 .kpi { background:var(--card); border-radius:10px; padding:13px 16px; box-shadow:var(--shadow); border-top:3px solid var(--blue); }
 .kpi.red    { border-top-color:var(--red); }
@@ -84,14 +84,14 @@ tfoot td.r { text-align:right; color:var(--red); }
 
 <header>
   <div>
-    <h1>ð° FinanÃ§as Dashboard</h1>
+    <h1>💰 Finanças Dashboard</h1>
     <div class="sub">Controle financeiro pessoal</div>
   </div>
   <div id="lastUpdate"></div>
 </header>
 
 <div class="ctrl">
-  <label>MÃS/ANO</label>
+  <label>MÊS/ANO</label>
   <select id="selMes" onchange="applyFilter()"><option value="">Todos</option></select>
 </div>
 
@@ -103,11 +103,11 @@ tfoot td.r { text-align:right; color:var(--red); }
 <!-- Charts -->
 <div class="row1">
   <div class="card">
-    <div class="card-title">ð Espanha â¬ â Plan vs Real (todas as categorias)</div>
+    <div class="card-title">📊 Espanha € — Plan vs Real (todas as categorias)</div>
     <div style="position:relative;height:280px"><canvas id="cEsp"></canvas></div>
   </div>
   <div class="card">
-    <div class="card-title">ð¸ð¦ Arabia SAR â Plan vs Real</div>
+    <div class="card-title">🇸🇦 Arabia SAR — Plan vs Real</div>
     <div style="position:relative;height:280px"><canvas id="cArab"></canvas></div>
   </div>
 </div>
@@ -115,15 +115,15 @@ tfoot td.r { text-align:right; color:var(--red); }
 <!-- Bottom -->
 <div class="row2">
   <div class="card">
-    <div class="card-title">ð³ Parcelamentos â PrÃ³ximos Meses (SAR)</div>
+    <div class="card-title">💳 Parcelamentos — Próximos Meses (SAR)</div>
     <div id="parcWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
   <div class="card">
-    <div class="card-title">ð Investimentos</div>
+    <div class="card-title">📈 Investimentos</div>
     <div id="investWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
   <div class="card">
-    <div class="card-title">ð¸ð¦ Arabia Real â Por Categoria (SAR)</div>
+    <div class="card-title">🇸🇦 Arabia Real — Por Categoria (SAR)</div>
     <div id="arabRealWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
 </div>
@@ -133,7 +133,7 @@ const SHEET_ID = '1xEagjesBVqfq9YjjmbS56X6YzeU_ajDHxZyP7D_y9X4';
 const MESES   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const _ch     = {};
 
-aqync function gviz(sheet) {
+async function gviz(sheet) {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheet)}`;
   const txt = await (await fetch(url)).text();
   const tbl = JSON.parse(txt.match(/setResponse\(([\s\S]*)\)/)[1]).table;
@@ -156,11 +156,11 @@ function parseDate(v) {
 
 function fmtDate(v) {
   const d = parseDate(v);
-  return d ? d.toLocaleDateString('pt-BR') : (v ? String(v) : 'â');
+  return d ? d.toLocaleDateString('pt-BR') : (v ? String(v) : '—');
 }
 
 function fmt(n, dec=2) {
-  if (n==null || isNaN(+n)) return 'â';
+  if (n==null || isNaN(+n)) return '—';
   return (+n).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});
 }
 
@@ -190,7 +190,7 @@ function buildSel() {
 function filtered() {
   const ma = document.getElementById('selMes').value;
   if (!ma) return allTrans;
-  return allTrans.filter(t => String(t['Mes/Ano ']||'') === ma);
+  return allTrans.filter(t => String(t['Mes/Ano']||'') === ma);
 }
 
 function renderKPIs(trans) {
@@ -217,10 +217,10 @@ function renderKPIs(trans) {
   const saldoProx  = salarioEUR - gordaEspEUR - espOrcEUR - pensaoEUR - valiEUR - gordaBraEUR - parcEUR;
 
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi red"><div class="kpi-lbl">ð¸ð¦ Total Expenses<br>Saudi Arabia (mÃªs atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">Ciclo SAB â lÃ­quido (excl. parcelamentos)</div></div>
-    <div class="kpi orange"><div class="kpi-lbl">ðªð¸ Total Expenses<br>Spain (atÃ© o momento)</div><div class="kpi-val">â¬ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA â despesas do mÃªs</div></div>
-    <div class="kpi green"><div class="kpi-lbl">ð¶ Total Balance Spain<br>(mÃªs atual)</div><div class="kpi-val">â¬ ${fmt(saldoAtual,2)}</div><div class="kpi-sub">SalÃ¡rio â GordaEsp â Espanha real â PensÃ£o â Valeria â GordaBra</div></div>
-    <div class="kpi purple"><div class="kpi-lbl">ð Total Balance Spain<br>(prÃ³ximo mÃªs)</div><div class="kpi-val">â¬ ${fmt(saldoProx,2)}</div><div class="kpi-sub">SalÃ¡rio â GordaEsp â Esp.orc â PensÃ£o â Valeria â GordaBra â Parc.</div></div>`;
+    <div class="kpi red"><div class="kpi-lbl">🇸🇦 Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">Ciclo SAB — líquido (excl. parcelamentos)</div></div>
+    <div class="kpi orange"><div class="kpi-lbl">🇪🇸 Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — despesas do mês</div></div>
+    <div class="kpi green"><div class="kpi-lbl">💶 Total Balance Spain<br>(mês atual)</div><div class="kpi-val">€ ${fmt(saldoAtual,2)}</div><div class="kpi-sub">Salário − GordaEsp − Espanha real − Pensão − Valeria − GordaBra</div></div>
+    <div class="kpi purple"><div class="kpi-lbl">📅 Total Balance Spain<br>(próximo mês)</div><div class="kpi-val">€ ${fmt(saldoProx,2)}</div><div class="kpi-sub">Salário − GordaEsp − Esp.orc − Pensão − Valeria − GordaBra − Parc.</div></div>`;
 }
 
 function renderEspanha(trans) {
@@ -243,8 +243,7 @@ function renderEspanha(trans) {
 
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
     .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-  mkChart('cEsp',{
-+type:'bar',data:{labels:cats,datasets:[{label:'Real (â¬)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (â¬)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{labels:{font:{size:10}}}}},scales:{x:{grid:{display:false},ticks:{labels:{font:{size:8}},maxRotation:45}},y:{grid:{color:'#eee'},ticks:{callback:n=>'â¬'+fmt(n,0)}}}}});
+  mkChart('cEsp',{type:'bar',data:{labels:cats,datasets:[{label:'Real (€)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (€)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{grid:{color:'#eee'},ticks:{callback:n=>'€'+fmt(n,0)}}}}});
 }
 
 function renderArabia(trans) {
@@ -264,7 +263,7 @@ function renderArabia(trans) {
   const realMap = {};
   Object.entries(realRaw).forEach(([c,val]) => { if (val<0) realMap[c]=Math.abs(val); });
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])].sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-  mkChart('cArab',{type:'bar',options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{grid:{color:'#eee'},ticks:{rcallback:n=>fmt(n,0)}}}},data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]}});
+  mkChart('cArab',{type:'bar',options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}}},data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]}});
 }
 
 function renderParc() {
@@ -285,22 +284,22 @@ function renderParc() {
   const tots = new Array(6).fill(0);
   const rows = active.map(p => {
     const sar=Math.abs(parseFloat(p['Valor_SAR']||0)),cur=parseInt(p['Parcela_Atual']||1),tot=parseInt(p['Total_Parcelas']||1),left=tot-cur+1,offset=startOffset(p);
-    const cells=cols.map((_,i)=>{if(i>=offset&&i<offset+left){tots[i]+=sar;return `<td class="r neg">${fmt(sar,0)}</td>`;}return `<td class="r" style="color:var(--muted)">â</td>`;});
-    const desc=p['Descricao']||'â';
+    const cells=cols.map((_,i)=>{if(i>=offset&&i<offset+left){tots[i]+=sar;return `<td class="r neg">${fmt(sar,0)}</td>`;}return `<td class="r" style="color:var(--muted)">—</td>`;});
+    const desc=p['Descricao']||'—';
     return `<tr><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc}</td><td class="r">${cur}/${tot}</td><td class="r">${fmt(sar*tot,0)}</td>${cells.join('')}</tr>`;
   }).join('');
-  document.getElementById('parcWrap').innerHTML=`<table><thead><tr><th>Item</th><th class="r">Parc.</th><th class="r">Total</th>${cols.map(c=>`<th class="r">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3">Total SAR/mÃªs</td>${tots.map(t=>`<td class="r">${fmt(t,0)}</td>`).join('')}</tr></tfoot></table>`;
+  document.getElementById('parcWrap').innerHTML=`<table><thead><tr><th>Item</th><th class="r">Parc.</th><th class="r">Total</th>${cols.map(c=>`<th class="r">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3">Total SAR/mês</td>${tots.map(t=>`<td class="r">${fmt(t,0)}</td>`).join('')}</tr></tfoot></table>`;
 }
 
 function renderInvest() {
-  const total=resumo['Saldo_Poupanca_EUR']||0,falta=resumo['Falta_Meta_EUR']||0,pct=Math.min((total/200000)*100,100),meses=resumo['Meses_Para_Meta']||0,previsao=resumo['Previsao_Meta']||'â',ritmo=resumo['Ritmo_Jan2028_EUR']||0;
+  const total=resumo['Saldo_Poupanca_EUR']||0,falta=resumo['Falta_Meta_EUR']||0,pct=Math.min((total/200000)*100,100),meses=resumo['Meses_Para_Meta']||0,previsao=resumo['Previsao_Meta']||'—',ritmo=resumo['Ritmo_Jan2028_EUR']||0;
   document.getElementById('investWrap').innerHTML=`
-  <div class="invest-total"><div class="val">â¬ ${fmt(total,0)}</div><div class="lbl">PoupanÃ§a atual</div></div>
+  <div class="invest-total"><div class="val">€ ${fmt(total,0)}</div><div class="lbl">Poupança atual</div></div>
   <div style="background:#ede8e0;border-radius:8px;height:12px;margin:8px 0"><div style="background:var(--green);border-radius:8px;height:12px;width:${pct}%"></div></div>
   <div style="margin-top:10px;font-size:.67rem;color:var(--muted);line-height:1.6">
-    <div>ð Falta: <b>â¬ ${fmt(falta,0)}</b> para meta â¬200k</div>
-    <div>ð PrevisÃ£o: <b>${previsao}</b> (${fmt(meses,1)} meses)</div>
-    <div>â¡ Ritmo p/ Jan/2028: <b>â¬ ${fmt(ritmo,0)}/mÃªs</b></div>
+    <div>📌 Falta: <b>€ ${fmt(falta,0)}</b> para meta €200k</div>
+    <div>📅 Previsão: <b>${previsao}</b> (${fmt(meses,1)} meses)</div>
+    <div>⚡ Ritmo p/ Jan/2028: <b>€ ${fmt(ritmo,0)}/mês</b></div>
     <div style="margin-top:6px;opacity:.6">Breakdown por ativo: em breve (GetQuin)</div>
   </div>`;
 }
@@ -338,7 +337,7 @@ async function init() {
     renderInvest();
   } catch(e) {
     console.error(e);
-    document.getElementById('kpiRow').innerHTML=`<div style="color:var(--red);padding:20px;grid-column:1/-1">â Erro ao carregar. Verifique se a planilha estÃ¡ pÃºblica.<br><small>${e.message}</small></div>`;
+    document.getElementById('kpiRow').innerHTML=`<div style="color:var(--red);padding:20px;grid-column:1/-1">❌ Erro ao carregar. Verifique se a planilha está pública.<br><small>${e.message}</small></div>`;
   }
 }
 
