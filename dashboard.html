@@ -255,8 +255,7 @@ function renderKPIs(trans) {
     if (realSpent < plan) prevNaoDebit += plan - realSpent;
   });
 
-  console.log('[KPI] totEUR:', totEUR, 'espOrcEUR:', espOrcEUR, 'prevNaoDebit:', prevNaoDebit,
-    'planByCat:', planByCat, 'realByCat:', realByCat);
+
 
   const saldoAtual  = salarioEUR - gordaEspEUR - totEUR   - pensaoEUR - valiEUR - gordaBraEUR;
   const saldoPrev   = saldoAtual - prevNaoDebit;
@@ -289,7 +288,6 @@ function renderEspanha(trans) {
     });
   const realMap = {};
   Object.entries(realRaw).forEach(([c, net]) => { if (net < 0) realMap[c] = Math.abs(net); });
-  console.log('[Chart ESP] realRaw:', realRaw, 'realMap:', realMap, 'trans count:', trans.length);
 
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
     .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
@@ -356,7 +354,7 @@ function renderInvest() {
 
 function renderArabReal(trans) {
   const raw = {};
-  trans.filter(t => (t['Pais/Conta']||'').includes('Arabia') || t['Moeda']==='SAR').forEach(t => {
+  trans.filter(t => t['Moeda']==='SAR').forEach(t => {
     const cat=t['Categoria']||'Outros';
     raw[cat]=(raw[cat]||0)+v(t);
   });
@@ -368,9 +366,6 @@ function renderArabReal(trans) {
 
 function applyFilter() {
   const trans=filtered();
-  console.log('[DEBUG] allTrans:', allTrans.length, '| trans filtrado:', trans.length,
-    '| primeiros getMesAno:', allTrans.slice(0,5).map(t=>getMesAno(t)),
-    '| raw Data[0]:', allTrans[0]&&JSON.stringify(allTrans[0]['Data']));
   renderKPIs(trans);
   renderEspanha(trans);
   renderArabia(trans);
