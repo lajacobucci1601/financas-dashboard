@@ -199,16 +199,20 @@ function addMeses(mesAno, n) {
 }
 
 // Retorna o valor de plano ajustado para despesas periódicas.
-// Se o item tem Mes/Ano (última cobrança) e Obs com "X meses",
-// só retorna o valor no mês em que a próxima cobrança cai.
+// Lê Periodicidade (ex: "6") ou Obs (ex: "6 meses") para o período,
+// e Mes/Ano para a última cobrança. Só retorna o valor no mês devido.
 function calcPlanValue(o, currentMesAno) {
   const val = Math.abs(parseFloat(o['Valor'] || 0));
   const ultimaCobranca = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
   if (!ultimaCobranca) return val; // despesa mensal normal
-  const obs = (o['Obs'] || o['obs'] || '').toLowerCase();
-  const pm = obs.match(/(\d+)\s*meses?/);
+
+  // Tenta coluna Periodicidade primeiro, depois Obs
+  const periStr = String(o['Periodicidade'] || o['periodicidade'] || o['Obs'] || o['obs'] || '').toLowerCase();
+  const pm = periStr.match(/(\d+)/);
   if (!pm) return val; // sem info de período → mensal
+
   const periodo = parseInt(pm[1]);
+  if (periodo <= 1) return val; // período 1 = mensal
   const proxCobranca = addMeses(ultimaCobranca, periodo);
   return proxCobranca === currentMesAno ? val : 0;
 }
@@ -400,15 +404,6 @@ async function init() {
   try {
     [allTrans,allOrc,allParc]=await Promise.all([gviz('Transacoes'),gviz('Orcamento'),gviz('Parcelamentos')]);
     applyRemaps(allTrans);
-    // DEBUG: mostrar estrutura das linhas de despesas periódicas do Orçamento
-    const periodic = allOrc.filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR');
-    console.log('ORC cols (first row keys):', periodic.length ? Object.keys(periodic[0]) : 'nenhum');
-    periodic.forEach(o => {
-      const obs = o['Obs'] || o['obs'] || '';
-      if (/meses?/i.test(String(obs))) {
-        console.log('PERIODIC ORC ROW:', JSON.stringify(o));
-      }
-    });
     const resumoRows=await gviz('Resumo');
     resumo=resumoRows.length?resumoRows[resumoRows.length-1]:{};
     const att=resumo['Data_Atualizacao'];
