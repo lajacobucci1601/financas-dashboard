@@ -400,6 +400,15 @@ async function init() {
   try {
     [allTrans,allOrc,allParc]=await Promise.all([gviz('Transacoes'),gviz('Orcamento'),gviz('Parcelamentos')]);
     applyRemaps(allTrans);
+    // DEBUG: mostrar estrutura das linhas de despesas periódicas do Orçamento
+    const periodic = allOrc.filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR');
+    console.log('ORC cols (first row keys):', periodic.length ? Object.keys(periodic[0]) : 'nenhum');
+    periodic.forEach(o => {
+      const obs = o['Obs'] || o['obs'] || '';
+      if (/meses?/i.test(String(obs))) {
+        console.log('PERIODIC ORC ROW:', JSON.stringify(o));
+      }
+    });
     const resumoRows=await gviz('Resumo');
     resumo=resumoRows.length?resumoRows[resumoRows.length-1]:{};
     const att=resumo['Data_Atualizacao'];
