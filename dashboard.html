@@ -213,13 +213,14 @@ function renderKPIs(trans) {
   const parcSAR     = allParc.filter(p=>p['Ativo']==='Sim').reduce((s,p)=>s+Math.abs(parseFloat(p['Valor_SAR']||0)),0);
   const parcEUR     = parcSAR / taxa_sar;
 
-  const saldoAtual = salarioEUR - gordaEspEUR - totEUR - pensaoEUR - valiEUR - gordaBraEUR;
+  const espAtualEUR = Math.max(totEUR, espOrcEUR);
+  const saldoAtual = salarioEUR - gordaEspEUR - espAtualEUR - pensaoEUR - valiEUR - gordaBraEUR;
   const saldoProx  = salarioEUR - gordaEspEUR - espOrcEUR - pensaoEUR - valiEUR - gordaBraEUR - parcEUR;
 
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi red"><div class="kpi-lbl">🇸🇦 Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">Ciclo SAB — líquido (excl. parcelamentos)</div></div>
     <div class="kpi orange"><div class="kpi-lbl">🇪🇸 Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — despesas do mês</div></div>
-    <div class="kpi green"><div class="kpi-lbl">💶 Total Balance Spain<br>(mês atual)</div><div class="kpi-val">€ ${fmt(saldoAtual,2)}</div><div class="kpi-sub">Salário − GordaEsp − Espanha real − Pensão − Valeria − GordaBra</div></div>
+    <div class="kpi green"><div class="kpi-lbl">💶 Total Balance Spain<br>(mês atual)</div><div class="kpi-val">€ ${fmt(saldoAtual,2)}</div><div class="kpi-sub">Salário − GordaEsp − max(real,orc) − Pensão − Valeria − GordaBra</div></div>
     <div class="kpi purple"><div class="kpi-lbl">📅 Total Balance Spain<br>(próximo mês)</div><div class="kpi-val">€ ${fmt(saldoProx,2)}</div><div class="kpi-sub">Salário − GordaEsp − Esp.orc − Pensão − Valeria − GordaBra − Parc.</div></div>`;
 }
 
@@ -273,7 +274,7 @@ function renderParc() {
   const cols = [];
   for (let i=0;i<6;i++) { const d=new Date(now.getFullYear(),now.getMonth()+i,2); cols.push(`${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`); }
   function startOffset(p) {
-    const mi = (p['Mes_Inicio']||'').trim();
+    const mi = (p['Inicio']||p['Mes_Inicio']||'').trim();
     if (!mi) return 0;
     const [mm,yy] = mi.split('/');
     const mIdx = MESES.indexOf(mm);
