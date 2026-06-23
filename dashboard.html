@@ -183,9 +183,18 @@ function mkChart(id, cfg) {
 
 let allTrans=[], allOrc=[], allParc=[], resumo={};
 
+function parseMesAno(val) {
+  if (!val) return null;
+  const s = String(val);
+  // gviz retorna datas como "Date(2026,5,26)" — converte para "Jun/26"
+  const m = s.match(/Date\((\d+),(\d+),\d+\)/);
+  if (m) return `${MESES[+m[2]]}/${String(+m[1]).slice(2)}`;
+  return s.trim();
+}
+
 function buildSel() {
   const set = new Set();
-  allTrans.forEach(t => { if (t['Mes/Ano']) set.add(String(t['Mes/Ano'])); });
+  allTrans.forEach(t => { const ma = parseMesAno(t['Mes/Ano']); if (ma) set.add(ma); });
   const sorted = [...set].sort((a,b) => {
     const p = s => { const[m,y]=s.split('/'); return (2000+parseInt(y))*100+MESES.indexOf(m); };
     return p(a)-p(b);
@@ -199,7 +208,7 @@ function buildSel() {
 function filtered() {
   const ma = document.getElementById('selMes').value;
   if (!ma) return allTrans;
-  return allTrans.filter(t => String(t['Mes/Ano']||'') === ma);
+  return allTrans.filter(t => parseMesAno(t['Mes/Ano']) === ma);
 }
 
 function renderKPIs(trans) {
