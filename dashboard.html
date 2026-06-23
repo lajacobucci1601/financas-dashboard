@@ -191,6 +191,28 @@ function parseMesAno(val) {
   return s.trim();
 }
 
+// Avança N meses a partir de "Mmm/YY" e retorna "Mmm/YY"
+function addMeses(mesAno, n) {
+  const [m, y] = mesAno.split('/');
+  const total = (2000 + parseInt(y)) * 12 + MESES.indexOf(m) + n;
+  return `${MESES[total % 12]}/${String(Math.floor(total / 12)).slice(2)}`;
+}
+
+// Retorna o valor de plano ajustado para despesas periódicas.
+// Se o item tem Mes/Ano (última cobrança) e Obs com "X meses",
+// só retorna o valor no mês em que a próxima cobrança cai.
+function calcPlanValue(o, currentMesAno) {
+  const val = Math.abs(parseFloat(o['Valor'] || 0));
+  const ultimaCobranca = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
+  if (!ultimaCobranca) return val; // despesa mensal normal
+  const obs = (o['Obs'] || o['obs'] || '').toLowerCase();
+  const pm = obs.match(/(\d+)\s*meses?/);
+  if (!pm) return val; // sem info de período → mensal
+  const periodo = parseInt(pm[1]);
+  const proxCobranca = addMeses(ultimaCobranca, periodo);
+  return proxCobranca === currentMesAno ? val : 0;
+}
+
 function getMesAno(t) {
   // Tenta coluna Mes/Ano primeiro (aceita variações de nome)
   const raw = t['Mes/Ano'] || t['Mês/Ano'] || t['MES/ANO'] || t['mes/ano'] || t['Mes/Ano '];
@@ -242,10 +264,11 @@ function renderKPIs(trans) {
   const parcEUR     = parcSAR / taxa_sar;
 
   // Planned vs real por categoria para calcular o que ainda falta debitar
+  const currentMesAno = document.getElementById('selMes').value;
   const EXCL_KPI = ['Gorda Brasil','Pensao Enzo','GordaBrasil','PensaoEnzo'];
   const planByCat = {};
   allOrc.filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR')
-    .forEach(o => { const c=o['Descricao']||'Outros'; planByCat[c]=(planByCat[c]||0)+Math.abs(parseFloat(o['Valor']||0)); });
+    .forEach(o => { const c=o['Descricao']||'Outros'; planByCat[c]=(planByCat[c]||0)+calcPlanValue(o, currentMesAno); });
   const realByCat = {};
   trans.filter(t => t['Pais/Conta']==='Espanha' && !EXCL_KPI.includes(t['Categoria']||''))
     .forEach(t => { const c=t['Categoria']||'Outros'; realByCat[c]=(realByCat[c]||0)+v(t); });
@@ -270,12 +293,13 @@ function renderKPIs(trans) {
 }
 
 function renderEspanha(trans) {
+  const currentMesAno = document.getElementById('selMes').value;
   const planMap = {};
   allOrc
     .filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR')
     .forEach(o => {
       const cat = o['Descricao'] || 'Outros';
-      planMap[cat] = (planMap[cat]||0) + Math.abs(parseFloat(o['Valor']||0));
+      planMap[cat] = (planMap[cat]||0) + calcPlanValue(o, currentMesAno);
     });
 
   const EXCL_CATS = ['Gorda Brasil','Pensao Enzo','GordaBrasil','PensaoEnzo'];
