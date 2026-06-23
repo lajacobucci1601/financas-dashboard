@@ -191,28 +191,36 @@ function parseMesAno(val) {
   return s.trim();
 }
 
-// Avança N meses a partir de "Mmm/YY" e retorna "Mmm/YY"
+// Avança N meses a partir de "Mmm/YY" ou "Mmm/YYYY" e retorna "Mmm/YY"
 function addMeses(mesAno, n) {
   const [m, y] = mesAno.split('/');
-  const total = (2000 + parseInt(y)) * 12 + MESES.indexOf(m) + n;
+  const fullYear = parseInt(y) < 100 ? 2000 + parseInt(y) : parseInt(y);
+  const total = fullYear * 12 + MESES.indexOf(m) + n;
   return `${MESES[total % 12]}/${String(Math.floor(total / 12)).slice(2)}`;
 }
 
+// Mapeia texto de periodicidade para número de meses
+function parsePeriodo(o) {
+  const periStr = String(o['Periodicidade'] || o['periodicidade'] || o['Obs'] || o['obs'] || '').toLowerCase();
+  if (/semestral/.test(periStr)) return 6;
+  if (/trimestral/.test(periStr)) return 3;
+  if (/anual/.test(periStr)) return 12;
+  if (/bimestral/.test(periStr)) return 2;
+  const pm = periStr.match(/(\d+)/);
+  return pm ? parseInt(pm[1]) : null;
+}
+
 // Retorna o valor de plano ajustado para despesas periódicas.
-// Lê Periodicidade (ex: "6") ou Obs (ex: "6 meses") para o período,
-// e Mes/Ano para a última cobrança. Só retorna o valor no mês devido.
+// Lê Periodicidade ("Semestral"/"Trimestral"/número) e Mes/Ano (última cobrança).
+// Só retorna o valor no mês em que a próxima cobrança cai.
 function calcPlanValue(o, currentMesAno) {
   const val = Math.abs(parseFloat(o['Valor'] || 0));
   const ultimaCobranca = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
-  if (!ultimaCobranca) return val; // despesa mensal normal
+  if (!ultimaCobranca) return val; // sem última cobrança → mensal normal
 
-  // Tenta coluna Periodicidade primeiro, depois Obs
-  const periStr = String(o['Periodicidade'] || o['periodicidade'] || o['Obs'] || o['obs'] || '').toLowerCase();
-  const pm = periStr.match(/(\d+)/);
-  if (!pm) return val; // sem info de período → mensal
+  const periodo = parsePeriodo(o);
+  if (!periodo || periodo <= 1) return val; // mensal normal
 
-  const periodo = parseInt(pm[1]);
-  if (periodo <= 1) return val; // período 1 = mensal
   const proxCobranca = addMeses(ultimaCobranca, periodo);
   return proxCobranca === currentMesAno ? val : 0;
 }
