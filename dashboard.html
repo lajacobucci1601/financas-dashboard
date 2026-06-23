@@ -245,13 +245,15 @@ function renderEspanha(trans) {
     });
 
   const EXCL_CATS = ['Gorda Brasil','Pensao Enzo','GordaBrasil','PensaoEnzo'];
-  const realMap = {};
+  const realRaw = {};
   trans
-    .filter(t => t['Pais/Conta']==='Espanha' && v(t)<0 && !EXCL_CATS.includes(t['Categoria']||''))
+    .filter(t => t['Pais/Conta']==='Espanha' && !EXCL_CATS.includes(t['Categoria']||''))
     .forEach(t => {
       const cat = t['Categoria']||'Outros';
-      realMap[cat] = (realMap[cat]||0) + Math.abs(v(t));
+      realRaw[cat] = (realRaw[cat]||0) + v(t);
     });
+  const realMap = {};
+  Object.entries(realRaw).forEach(([c, net]) => { if (net < 0) realMap[c] = Math.abs(net); });
 
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
     .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
