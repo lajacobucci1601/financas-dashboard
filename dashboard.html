@@ -186,15 +186,25 @@ let allTrans=[], allOrc=[], allParc=[], resumo={};
 function parseMesAno(val) {
   if (!val) return null;
   const s = String(val);
-  // gviz retorna datas como "Date(2026,5,26)" — converte para "Jun/26"
   const m = s.match(/Date\((\d+),(\d+),\d+\)/);
   if (m) return `${MESES[+m[2]]}/${String(+m[1]).slice(2)}`;
   return s.trim();
 }
 
+function getMesAno(t) {
+  // Tenta coluna Mes/Ano primeiro (aceita variações de nome)
+  const raw = t['Mes/Ano'] || t['Mês/Ano'] || t['MES/ANO'] || t['mes/ano'] || t['Mes/Ano '];
+  const fromCol = parseMesAno(raw);
+  if (fromCol) return fromCol;
+  // Fallback: deriva da coluna Data
+  const d = parseDate(t['Data'] || t['data'] || t['DATA']);
+  if (d) return `${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
+  return null;
+}
+
 function buildSel() {
   const set = new Set();
-  allTrans.forEach(t => { const ma = parseMesAno(t['Mes/Ano']); if (ma) set.add(ma); });
+  allTrans.forEach(t => { const ma = getMesAno(t); if (ma) set.add(ma); });
   const sorted = [...set].sort((a,b) => {
     const p = s => { const[m,y]=s.split('/'); return (2000+parseInt(y))*100+MESES.indexOf(m); };
     return p(a)-p(b);
@@ -208,7 +218,7 @@ function buildSel() {
 function filtered() {
   const ma = document.getElementById('selMes').value;
   if (!ma) return allTrans;
-  return allTrans.filter(t => parseMesAno(t['Mes/Ano']) === ma);
+  return allTrans.filter(t => getMesAno(t) === ma);
 }
 
 function renderKPIs(trans) {
@@ -358,9 +368,9 @@ function renderArabReal(trans) {
 
 function applyFilter() {
   const trans=filtered();
-  console.log('[DEBUG] allTrans total:', allTrans.length, '| trans filtrado:', trans.length,
-    '| dropdown val:', document.getElementById('selMes').value,
-    '| primeiros Mes/Ano raw:', allTrans.slice(0,5).map(t=>JSON.stringify(t['Mes/Ano'])));
+  console.log('[DEBUG] allTrans:', allTrans.length, '| trans filtrado:', trans.length,
+    '| primeiros getMesAno:', allTrans.slice(0,5).map(t=>getMesAno(t)),
+    '| raw Data[0]:', allTrans[0]&&JSON.stringify(allTrans[0]['Data']));
   renderKPIs(trans);
   renderEspanha(trans);
   renderArabia(trans);
