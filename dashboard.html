@@ -358,6 +358,9 @@ function renderArabReal(trans) {
 
 function applyFilter() {
   const trans=filtered();
+  console.log('[DEBUG] allTrans total:', allTrans.length, '| trans filtrado:', trans.length,
+    '| dropdown val:', document.getElementById('selMes').value,
+    '| primeiros Mes/Ano raw:', allTrans.slice(0,5).map(t=>JSON.stringify(t['Mes/Ano'])));
   renderKPIs(trans);
   renderEspanha(trans);
   renderArabia(trans);
