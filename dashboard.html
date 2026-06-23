@@ -231,8 +231,24 @@ function renderKPIs(trans) {
   const parcSAR     = allParc.filter(p=>p['Ativo']==='Sim').reduce((s,p)=>s+Math.abs(parseFloat(p['Valor_SAR']||0)),0);
   const parcEUR     = parcSAR / taxa_sar;
 
+  // Planned vs real por categoria para calcular o que ainda falta debitar
+  const EXCL_KPI = ['Gorda Brasil','Pensao Enzo','GordaBrasil','PensaoEnzo'];
+  const planByCat = {};
+  allOrc.filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR')
+    .forEach(o => { const c=o['Descricao']||'Outros'; planByCat[c]=(planByCat[c]||0)+Math.abs(parseFloat(o['Valor']||0)); });
+  const realByCat = {};
+  trans.filter(t => t['Pais/Conta']==='Espanha' && !EXCL_KPI.includes(t['Categoria']||''))
+    .forEach(t => { const c=t['Categoria']||'Outros'; realByCat[c]=(realByCat[c]||0)+v(t); });
+  let prevNaoDebit = 0;
+  Object.entries(planByCat).forEach(([cat, plan]) => {
+    const realSpent = Math.max(0, -(realByCat[cat]||0));
+    if (realSpent < plan) prevNaoDebit += plan - realSpent;
+  });
+
+  console.log('[KPI] totEUR:', totEUR, 'espOrcEUR:', espOrcEUR, 'prevNaoDebit:', prevNaoDebit,
+    'planByCat:', planByCat, 'realByCat:', realByCat);
+
   const saldoAtual  = salarioEUR - gordaEspEUR - totEUR   - pensaoEUR - valiEUR - gordaBraEUR;
-  const prevNaoDebit = Math.max(0, espOrcEUR - totEUR);
   const saldoPrev   = saldoAtual - prevNaoDebit;
   const saldoProx   = salarioEUR - gordaEspEUR - espOrcEUR - pensaoEUR - valiEUR - gordaBraEUR - parcEUR;
 
@@ -263,6 +279,7 @@ function renderEspanha(trans) {
     });
   const realMap = {};
   Object.entries(realRaw).forEach(([c, net]) => { if (net < 0) realMap[c] = Math.abs(net); });
+  console.log('[Chart ESP] realRaw:', realRaw, 'realMap:', realMap, 'trans count:', trans.length);
 
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
     .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
