@@ -306,51 +306,104 @@ function renderKPIs(trans) {
   console.log(`Parc EUR:       -${parcEUR.toFixed(2)}  (${parcSAR.toFixed(0)} SAR / taxa ${taxa_sar})`);
   console.log(`TOTAL PRÓXIMO:  = ${saldoProx.toFixed(2)}`);
 
-  // --- DETALHAMENTO PARA NOVO CÁLCULO ---
-  const nextMes = (() => {
-    const sel = document.getElementById('selMes').value;
+  // ====== NOVO CÁLCULO PROPOSTO: BALANCE SPAIN (PRÓXIMO MÊS) ======
+  // Receitas − Despesas (SAR e BRL convertidos p/ EUR).
+  // Periódicos (Comunidade, Seguro Carro, Seguro Casa) só no mês devido.
+  // Parcelas = mês seguinte ao mês exibido (exibido = próximo mês).
+  const taxa_brl = resumo['Taxa_EUR_BRL'] || 6.2;
+
+  // Helpers de mês relativo ao selecionado
+  function addMesesSel(sel, n) {
     if (!sel) return null;
     const [m, y] = sel.split('/');
     const fullY = parseInt(y) < 100 ? 2000 + parseInt(y) : parseInt(y);
-    const total = fullY * 12 + MESES.indexOf(m) + 1;
+    const total = fullY * 12 + MESES.indexOf(m) + n;
     return `${MESES[total % 12]}/${String(Math.floor(total / 12)).slice(2)}`;
-  })();
-  console.log(`\n=== DETALHAMENTO PARA ${nextMes || 'PRÓXIMO MÊS'} ===`);
+  }
+  function mesIndex(mesAno) {
+    const [m, y] = mesAno.split('/');
+    const fullY = parseInt(y) < 100 ? 2000 + parseInt(y) : parseInt(y);
+    return fullY * 12 + MESES.indexOf(m);
+  }
+  const selMes = document.getElementById('selMes').value;
+  const mesExibido = addMesesSel(selMes, 1);   // o KPI mostra o próximo mês
+  const mesParc    = addMesesSel(selMes, 2);   // parcelas = mês seguinte ao exibido
 
-  // Spain EUR com lógica periódica
-  const espItems = allOrc.filter(o => o['Grupo']==='Espanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim');
-  let espTotal = 0;
-  espItems.forEach(o => {
-    const v = calcPlanValue(o, nextMes || currentMesAno);
-    espTotal += v;
-    if (v > 0) console.log(`  ESP: ${o['Descricao']} = ${v.toFixed(2)} EUR`);
+  // Parcelas ativas no mês alvo (mesParc), usando Inicio + parcelas restantes
+  function parcelaForMonth(targetMesAno) {
+    if (!targetMesAno) return 0;
+    const now = new Date();
+    const nowIdx = now.getFullYear()*12 + now.getMonth();
+    const tgtIdx = mesIndex(targetMesAno);
+    let total = 0;
+    allParc.filter(p => p['Ativo']==='Sim').forEach(p => {
+      const sar = Math.abs(parseFloat(p['Valor_SAR']||0));
+      const cur = parseInt(p['Parcela_Atual']||1);
+      const tot = parseInt(p['Total_Parcelas']||1);
+      const left = tot - cur + 1;
+      const mi = (p['Inicio']||p['Mes_Inicio']||'').trim();
+      const startIdx = mi ? mesIndex(mi) : nowIdx;
+      if (tgtIdx >= startIdx && tgtIdx < startIdx + left) total += sar;
+    });
+    return total;
+  }
+
+  console.log(`\n=== NOVO CÁLCULO — BALANCE para mês exibido ${mesExibido} (parcelas de ${mesParc}) ===`);
+
+  // Receitas (Grupo Receita) — assume EUR
+  let receitas = 0;
+  allOrc.filter(o => o['Grupo']==='Receita' && o['Ativo']==='Sim').forEach(o => {
+    const v = Math.abs(parseFloat(o['Valor']||0));
+    receitas += v;
+    console.log(`  RECEITA: ${o['Descricao']} = +${v.toFixed(2)} EUR`);
   });
-  console.log(`  ESP TOTAL: ${espTotal.toFixed(2)} EUR`);
 
-  // Arabia SAR
-  const arabItems = allOrc.filter(o => o['Grupo']==='Arabia' && o['Moeda']==='SAR' && o['Ativo']==='Sim' && o['Descricao']!=='Compras Parceladas');
+  // Espanha EUR (com periódicos)
+  let espTotal = 0;
+  allOrc.filter(o => o['Grupo']==='Espanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim').forEach(o => {
+    const v = calcPlanValue(o, mesExibido);
+    espTotal += v;
+    console.log(`  ESP ${o['Descricao']}: ${v>0?'-'+v.toFixed(2):'(0 - não debita este mês)'}`);
+  });
+
+  // GordaEspanha EUR
+  let gordaEspTotal = 0;
+  allOrc.filter(o => o['Grupo']==='GordaEspanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim').forEach(o => { gordaEspTotal += Math.abs(parseFloat(o['Valor']||0)); });
+
+  // GordaBrasil EUR
+  let gordaBraTotal = 0;
+  allOrc.filter(o => o['Grupo']==='GordaBrasil' && o['Moeda']==='EUR' && o['Ativo']==='Sim').forEach(o => { gordaBraTotal += Math.abs(parseFloat(o['Valor']||0)); });
+
+  // Arabia SAR mensal (exclui Compras Parceladas e a transferência Conta Espanha)
   let arabSAR = 0;
-  arabItems.forEach(o => {
+  allOrc.filter(o => o['Grupo']==='Arabia' && o['Moeda']==='SAR' && o['Ativo']==='Sim'
+                  && o['Descricao']!=='Compras Parceladas' && o['Descricao']!=='Conta Espanha').forEach(o => {
     const v = Math.abs(parseFloat(o['Valor']||0));
     arabSAR += v;
-    console.log(`  ARAB: ${o['Descricao']} = ${v.toFixed(0)} SAR = ${(v/taxa_sar).toFixed(2)} EUR`);
   });
-  console.log(`  ARAB TOTAL: ${arabSAR.toFixed(0)} SAR = ${(arabSAR/taxa_sar).toFixed(2)} EUR`);
-  console.log(`  ARAB PARC: ${parcSAR.toFixed(0)} SAR = ${parcEUR.toFixed(2)} EUR`);
 
-  // BRL
-  const taxa_brl = resumo['Taxa_EUR_BRL'] || 6.2;
-  const brlItems = allOrc.filter(o => o['Moeda']==='BRL' && o['Ativo']==='Sim');
+  // BRL (Pensão Enzo etc)
   let brlTotal = 0;
-  brlItems.forEach(o => {
+  allOrc.filter(o => o['Moeda']==='BRL' && o['Ativo']==='Sim').forEach(o => {
     const v = Math.abs(parseFloat(o['Valor']||0));
     brlTotal += v;
-    console.log(`  BRL: ${o['Descricao']} = ${v.toFixed(0)} BRL = ${(v/taxa_brl).toFixed(2)} EUR (taxa ${taxa_brl})`);
+    console.log(`  BRL ${o['Descricao']}: ${v.toFixed(0)} BRL = -${(v/taxa_brl).toFixed(2)} EUR (taxa ${taxa_brl})`);
   });
-  console.log(`  BRL TOTAL: ${brlTotal.toFixed(0)} BRL = ${(brlTotal/taxa_brl).toFixed(2)} EUR`);
 
-  const novoProximo = salarioEUR - gordaEspEUR - espTotal - (arabSAR/taxa_sar) - parcEUR - (brlTotal/taxa_brl) - gordaBraEUR - valiEUR;
-  console.log(`\n=== NOVO TOTAL PRÓXIMO (proposto): ${novoProximo.toFixed(2)} EUR ===`);
+  const parcAlvoSAR = parcelaForMonth(mesParc);
+
+  console.log(`  --- RESUMO (EUR) ---`);
+  console.log(`  + Receitas:        +${receitas.toFixed(2)}`);
+  console.log(`  - Espanha EUR:     -${espTotal.toFixed(2)}`);
+  console.log(`  - GordaEspanha:    -${gordaEspTotal.toFixed(2)}`);
+  console.log(`  - GordaBrasil:     -${gordaBraTotal.toFixed(2)}`);
+  console.log(`  - Arabia mensal:   -${(arabSAR/taxa_sar).toFixed(2)}  (${arabSAR.toFixed(0)} SAR /${taxa_sar})`);
+  console.log(`  - Parcelas ${mesParc}: -${(parcAlvoSAR/taxa_sar).toFixed(2)}  (${parcAlvoSAR.toFixed(0)} SAR)`);
+  console.log(`  - BRL:             -${(brlTotal/taxa_brl).toFixed(2)}`);
+
+  const novoProximo = receitas - espTotal - gordaEspTotal - gordaBraTotal
+                    - (arabSAR/taxa_sar) - (parcAlvoSAR/taxa_sar) - (brlTotal/taxa_brl);
+  console.log(`  ======> NOVO TOTAL: ${novoProximo.toFixed(2)} EUR`);
 
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi red"><div class="kpi-lbl">🇸🇦 Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">Ciclo SAB — líquido (excl. parcelamentos)</div></div>
