@@ -347,18 +347,28 @@ function renderKPIs(trans) {
 
 function renderEspanha(trans) {
   const currentMesAno = document.getElementById('selMes').value;
+  const taxa_sar = resumo['Taxa_EUR_SAR'] || 4.3008;
+  const taxa_brl = resumo['Taxa_EUR_BRL'] || 6.2;
   const planMap = {};
+
+  // Espanha EUR + GordaEspanha + GordaBrasil
   allOrc
-    .filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR')
+    .filter(o => ['Espanha','GordaEspanha','GordaBrasil'].includes(o['Grupo']) && o['Moeda']==='EUR')
     .forEach(o => {
       const cat = o['Descricao'] || 'Outros';
       planMap[cat] = (planMap[cat]||0) + calcPlanValue(o, currentMesAno);
     });
 
-  const EXCL_CATS = ['Gorda Brasil','Pensao Enzo','GordaBrasil','PensaoEnzo'];
+  // Pensao Enzo em BRL convertida para EUR
+  allOrc.filter(o => o['Moeda']==='BRL' && o['Ativo']==='Sim').forEach(o => {
+    const cat = o['Descricao'] || 'Outros';
+    const val = Math.abs(parseFloat(o['Valor']||0)) / taxa_brl;
+    planMap[cat] = (planMap[cat]||0) + val;
+  });
+
   const realRaw = {};
   trans
-    .filter(t => t['Pais/Conta']==='Espanha' && !EXCL_CATS.includes(t['Categoria']||''))
+    .filter(t => t['Pais/Conta']==='Espanha')
     .forEach(t => {
       const cat = t['Categoria']||'Outros';
       realRaw[cat] = (realRaw[cat]||0) + v(t);
