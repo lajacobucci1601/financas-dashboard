@@ -268,9 +268,24 @@ function renderKPIs(trans) {
 
   const currentMesAno = document.getElementById('selMes').value;
 
-  // Receitas (grupo Receita, EUR)
-  const receitas = allOrc.filter(o => o['Grupo']==='Receita' && o['Ativo']==='Sim')
-    .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
+  // Receitas reais (transações positivas em Espanha)
+  const receitasReal = trans.filter(t => t['Pais/Conta']==='Espanha' && v(t)>0);
+  const receitasRealTotal = receitasReal.reduce((s,t) => s+v(t), 0);
+
+  // Receitas planejadas (grupo Receita, EUR)
+  const receitasOrc = allOrc.filter(o => o['Grupo']==='Receita' && o['Ativo']==='Sim');
+  const receitasOrcTotal = receitasOrc.reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
+
+  console.log('=== DEBUG RECEITAS ===');
+  console.log('Receitas REAIS (transações positivas Espanha):');
+  receitasReal.forEach(t => console.log(`  ${t['Descricao']||''} | ${t['Categoria']||''} | +${v(t)}`));
+  console.log(`  TOTAL REAL: ${receitasRealTotal.toFixed(2)}`);
+  console.log('Receitas PLANEJADAS (Orcamento Receita):');
+  receitasOrc.forEach(o => console.log(`  ${o['Descricao']} | +${parseFloat(o['Valor']||0).toFixed(2)}`));
+  console.log(`  TOTAL ORC: ${receitasOrcTotal.toFixed(2)}`);
+  console.log(`totEUR (despesas Spain): ${totEUR.toFixed(2)}`);
+
+  const receitas = receitasRealTotal > 0 ? receitasRealTotal : receitasOrcTotal;
 
   // Saldo atual: receitas − GordaEsp − despesas reais Espanha − GordaBra − BRL
   const gordaEspEUR = allOrc.filter(o => o['Grupo']==='GordaEspanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim')
