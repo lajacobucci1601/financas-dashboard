@@ -306,6 +306,52 @@ function renderKPIs(trans) {
   console.log(`Parc EUR:       -${parcEUR.toFixed(2)}  (${parcSAR.toFixed(0)} SAR / taxa ${taxa_sar})`);
   console.log(`TOTAL PRÓXIMO:  = ${saldoProx.toFixed(2)}`);
 
+  // --- DETALHAMENTO PARA NOVO CÁLCULO ---
+  const nextMes = (() => {
+    const sel = document.getElementById('selMes').value;
+    if (!sel) return null;
+    const [m, y] = sel.split('/');
+    const fullY = parseInt(y) < 100 ? 2000 + parseInt(y) : parseInt(y);
+    const total = fullY * 12 + MESES.indexOf(m) + 1;
+    return `${MESES[total % 12]}/${String(Math.floor(total / 12)).slice(2)}`;
+  })();
+  console.log(`\n=== DETALHAMENTO PARA ${nextMes || 'PRÓXIMO MÊS'} ===`);
+
+  // Spain EUR com lógica periódica
+  const espItems = allOrc.filter(o => o['Grupo']==='Espanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim');
+  let espTotal = 0;
+  espItems.forEach(o => {
+    const v = calcPlanValue(o, nextMes || currentMesAno);
+    espTotal += v;
+    if (v > 0) console.log(`  ESP: ${o['Descricao']} = ${v.toFixed(2)} EUR`);
+  });
+  console.log(`  ESP TOTAL: ${espTotal.toFixed(2)} EUR`);
+
+  // Arabia SAR
+  const arabItems = allOrc.filter(o => o['Grupo']==='Arabia' && o['Moeda']==='SAR' && o['Ativo']==='Sim' && o['Descricao']!=='Compras Parceladas');
+  let arabSAR = 0;
+  arabItems.forEach(o => {
+    const v = Math.abs(parseFloat(o['Valor']||0));
+    arabSAR += v;
+    console.log(`  ARAB: ${o['Descricao']} = ${v.toFixed(0)} SAR = ${(v/taxa_sar).toFixed(2)} EUR`);
+  });
+  console.log(`  ARAB TOTAL: ${arabSAR.toFixed(0)} SAR = ${(arabSAR/taxa_sar).toFixed(2)} EUR`);
+  console.log(`  ARAB PARC: ${parcSAR.toFixed(0)} SAR = ${parcEUR.toFixed(2)} EUR`);
+
+  // BRL
+  const taxa_brl = resumo['Taxa_EUR_BRL'] || 6.2;
+  const brlItems = allOrc.filter(o => o['Moeda']==='BRL' && o['Ativo']==='Sim');
+  let brlTotal = 0;
+  brlItems.forEach(o => {
+    const v = Math.abs(parseFloat(o['Valor']||0));
+    brlTotal += v;
+    console.log(`  BRL: ${o['Descricao']} = ${v.toFixed(0)} BRL = ${(v/taxa_brl).toFixed(2)} EUR (taxa ${taxa_brl})`);
+  });
+  console.log(`  BRL TOTAL: ${brlTotal.toFixed(0)} BRL = ${(brlTotal/taxa_brl).toFixed(2)} EUR`);
+
+  const novoProximo = salarioEUR - gordaEspEUR - espTotal - (arabSAR/taxa_sar) - parcEUR - (brlTotal/taxa_brl) - gordaBraEUR - valiEUR;
+  console.log(`\n=== NOVO TOTAL PRÓXIMO (proposto): ${novoProximo.toFixed(2)} EUR ===`);
+
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi red"><div class="kpi-lbl">🇸🇦 Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">Ciclo SAB — líquido (excl. parcelamentos)</div></div>
     <div class="kpi orange"><div class="kpi-lbl">🇪🇸 Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — despesas do mês</div></div>
