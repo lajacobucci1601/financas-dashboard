@@ -374,10 +374,10 @@ function renderKPIs(trans) {
   let gordaBraTotal = 0;
   allOrc.filter(o => o['Grupo']==='GordaBrasil' && o['Moeda']==='EUR' && o['Ativo']==='Sim').forEach(o => { gordaBraTotal += Math.abs(parseFloat(o['Valor']||0)); });
 
-  // Arabia SAR mensal (exclui Compras Parceladas e a transferência Conta Espanha)
+  // Arabia SAR mensal (exclui apenas Compras Parceladas, contado à parte)
   let arabSAR = 0;
   allOrc.filter(o => o['Grupo']==='Arabia' && o['Moeda']==='SAR' && o['Ativo']==='Sim'
-                  && o['Descricao']!=='Compras Parceladas' && o['Descricao']!=='Conta Espanha').forEach(o => {
+                  && o['Descricao']!=='Compras Parceladas').forEach(o => {
     const v = Math.abs(parseFloat(o['Valor']||0));
     arabSAR += v;
   });
