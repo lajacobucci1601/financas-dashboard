@@ -296,6 +296,16 @@ function renderKPIs(trans) {
   const saldoPrev   = saldoAtual - prevNaoDebit;
   const saldoProx   = salarioEUR - gordaEspEUR - espOrcEUR - pensaoEUR - valiEUR - gordaBraEUR - parcEUR;
 
+  console.log('=== BALANCE SPAIN (PRÓXIMO MÊS) ===');
+  console.log(`Salário EUR:    +${salarioEUR.toFixed(2)}`);
+  console.log(`GordaEsp EUR:   -${gordaEspEUR.toFixed(2)}`);
+  console.log(`Esp.orc EUR:    -${espOrcEUR.toFixed(2)}`);
+  console.log(`Pensão EUR:     -${pensaoEUR.toFixed(2)}`);
+  console.log(`Valeria EUR:    -${valiEUR.toFixed(2)}`);
+  console.log(`GordaBra EUR:   -${gordaBraEUR.toFixed(2)}`);
+  console.log(`Parc EUR:       -${parcEUR.toFixed(2)}  (${parcSAR.toFixed(0)} SAR / taxa ${taxa_sar})`);
+  console.log(`TOTAL PRÓXIMO:  = ${saldoProx.toFixed(2)}`);
+
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi red"><div class="kpi-lbl">🇸🇦 Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">Ciclo SAB — líquido (excl. parcelamentos)</div></div>
     <div class="kpi orange"><div class="kpi-lbl">🇪🇸 Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — despesas do mês</div></div>
