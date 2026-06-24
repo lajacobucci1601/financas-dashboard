@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinanÃ§as Dashboard</title>
+<title>Finanças Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -27,12 +27,13 @@ header .sub { font-size:0.7rem; opacity:.55; }
 .ctrl select { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:5px; padding:4px 10px; font-size:.78rem; cursor:pointer; }
 .ctrl select option { background:var(--bar); }
 
-/* KPIs â 4 colunas */
-.kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:12px 20px 8px; }
+/* KPIs — 4 colunas */
+.kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; padding:12px 20px 8px; }
 .kpi { background:var(--card); border-radius:10px; padding:13px 16px; box-shadow:var(--shadow); border-top:3px solid var(--blue); }
 .kpi.red    { border-top-color:var(--red); }
 .kpi.green  { border-top-color:var(--green); }
 .kpi.orange { border-top-color:var(--orange); }
+.kpi.blue   { border-top-color:var(--blue); }
 .kpi.purple { border-top-color:var(--purple); }
 .kpi-lbl { font-size:.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; line-height:1.3; }
 .kpi-val { font-size:1.3rem; font-weight:700; }
@@ -75,7 +76,7 @@ tfoot td.r { text-align:right; color:var(--red); }
 @keyframes sp { to { transform:rotate(360deg); } }
 
 @media(max-width:900px) {
-  .kpi-row { grid-template-columns:repeat(2,1fr); }
+  .kpi-row { grid-template-columns:repeat(3,1fr); }
   .row1,.row2 { grid-template-columns:1fr; }
 }
 </style>
@@ -84,14 +85,14 @@ tfoot td.r { text-align:right; color:var(--red); }
 
 <header>
   <div>
-    <h1>ð° FinanÃ§as Dashboard</h1>
+    <h1>💰 Finanças Dashboard</h1>
     <div class="sub">Controle financeiro pessoal</div>
   </div>
   <div id="lastUpdate"></div>
 </header>
 
 <div class="ctrl">
-  <label>MÃS/ANO</label>
+  <label>MÊS/ANO</label>
   <select id="selMes" onchange="applyFilter()"><option value="">Todos</option></select>
 </div>
 
@@ -103,11 +104,11 @@ tfoot td.r { text-align:right; color:var(--red); }
 <!-- Charts -->
 <div class="row1">
   <div class="card">
-    <div class="card-title">ð Espanha â¬ â Plan vs Real (todas as categorias)</div>
+    <div class="card-title">📊 Espanha € — Plan vs Real (todas as categorias)</div>
     <div style="position:relative;height:280px"><canvas id="cEsp"></canvas></div>
   </div>
   <div class="card">
-    <div class="card-title">ð¸ð¦ Arabia SAR â Plan vs Real</div>
+    <div class="card-title">🇸🇦 Arabia SAR — Plan vs Real</div>
     <div style="position:relative;height:280px"><canvas id="cArab"></canvas></div>
   </div>
 </div>
@@ -115,15 +116,15 @@ tfoot td.r { text-align:right; color:var(--red); }
 <!-- Bottom -->
 <div class="row2">
   <div class="card">
-    <div class="card-title">ð³ Parcelamentos â PrÃ³ximos Meses (SAR)</div>
+    <div class="card-title">💳 Parcelamentos — Próximos Meses (SAR)</div>
     <div id="parcWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
   <div class="card">
-    <div class="card-title">ð Investimentos</div>
+    <div class="card-title">📈 Investimentos</div>
     <div id="investWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
   <div class="card">
-    <div class="card-title">ð¸ð¦ Arabia Real â Por Categoria (SAR)</div>
+    <div class="card-title">🇸🇦 Arabia Real — Por Categoria (SAR)</div>
     <div id="arabRealWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
 </div>
@@ -133,7 +134,14 @@ const SHEET_ID = '1xEagjesBVqfq9YjjmbS56X6YzeU_ajDHxZyP7D_y9X4';
 const MESES   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const _ch     = {};
 
-// ââ utils âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const REMAPS = [
+  { test: t => (t['Descricao']||'').toLowerCase().includes('amortizacion de prestamo'), cat: 'Lavanderia' },
+  { test: t => Math.abs(parseFloat(t['Valor']||0)) === 70 && t['Pais/Conta'] === 'Espanha',  cat: 'Garagem'   },
+];
+function applyRemaps(rows) {
+  rows.forEach(t => { REMAPS.forEach(r => { if (r.test(t)) t['Categoria'] = r.cat; }); });
+}
+
 async function gviz(sheet) {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheet)}`;
   const txt = await (await fetch(url)).text();
@@ -157,11 +165,11 @@ function parseDate(v) {
 
 function fmtDate(v) {
   const d = parseDate(v);
-  return d ? d.toLocaleDateString('pt-BR') : (v ? String(v) : 'â');
+  return d ? d.toLocaleDateString('pt-BR') : (v ? String(v) : '—');
 }
 
 function fmt(n, dec=2) {
-  if (n==null || isNaN(+n)) return 'â';
+  if (n==null || isNaN(+n)) return '—';
   return (+n).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});
 }
 
@@ -173,13 +181,64 @@ function mkChart(id, cfg) {
   if (el) _ch[id] = new Chart(el, cfg);
 }
 
-// ââ global data âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 let allTrans=[], allOrc=[], allParc=[], resumo={};
 
-// ââ selectors âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function parseMesAno(val) {
+  if (!val) return null;
+  const s = String(val);
+  const m = s.match(/Date\((\d+),(\d+),\d+\)/);
+  if (m) return `${MESES[+m[2]]}/${String(+m[1]).slice(2)}`;
+  return s.trim();
+}
+
+// Avança N meses a partir de "Mmm/YY" ou "Mmm/YYYY" e retorna "Mmm/YY"
+function addMeses(mesAno, n) {
+  const [m, y] = mesAno.split('/');
+  const fullYear = parseInt(y) < 100 ? 2000 + parseInt(y) : parseInt(y);
+  const total = fullYear * 12 + MESES.indexOf(m) + n;
+  return `${MESES[total % 12]}/${String(Math.floor(total / 12)).slice(2)}`;
+}
+
+// Mapeia texto de periodicidade para número de meses
+function parsePeriodo(o) {
+  const periStr = String(o['Periodicidade'] || o['periodicidade'] || o['Obs'] || o['obs'] || '').toLowerCase();
+  if (/semestral/.test(periStr)) return 6;
+  if (/trimestral/.test(periStr)) return 3;
+  if (/anual/.test(periStr)) return 12;
+  if (/bimestral/.test(periStr)) return 2;
+  const pm = periStr.match(/(\d+)/);
+  return pm ? parseInt(pm[1]) : null;
+}
+
+// Retorna o valor de plano ajustado para despesas periódicas.
+// Lê Periodicidade ("Semestral"/"Trimestral"/número) e Mes/Ano (última cobrança).
+// Só retorna o valor no mês em que a próxima cobrança cai.
+function calcPlanValue(o, currentMesAno) {
+  const val = Math.abs(parseFloat(o['Valor'] || 0));
+  const ultimaCobranca = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
+  if (!ultimaCobranca) return val; // sem última cobrança → mensal normal
+
+  const periodo = parsePeriodo(o);
+  if (!periodo || periodo <= 1) return val; // mensal normal
+
+  const proxCobranca = addMeses(ultimaCobranca, periodo);
+  return proxCobranca === currentMesAno ? val : 0;
+}
+
+function getMesAno(t) {
+  // Tenta coluna Mes/Ano primeiro (aceita variações de nome)
+  const raw = t['Mes/Ano'] || t['Mês/Ano'] || t['MES/ANO'] || t['mes/ano'] || t['Mes/Ano '];
+  const fromCol = parseMesAno(raw);
+  if (fromCol) return fromCol;
+  // Fallback: deriva da coluna Data
+  const d = parseDate(t['Data'] || t['data'] || t['DATA']);
+  if (d) return `${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
+  return null;
+}
+
 function buildSel() {
   const set = new Set();
-  allTrans.forEach(t => { if (t['Mes/Ano']) set.add(String(t['Mes/Ano'])); });
+  allTrans.forEach(t => { const ma = getMesAno(t); if (ma) set.add(ma); });
   const sorted = [...set].sort((a,b) => {
     const p = s => { const[m,y]=s.split('/'); return (2000+parseInt(y))*100+MESES.indexOf(m); };
     return p(a)-p(b);
@@ -193,325 +252,177 @@ function buildSel() {
 function filtered() {
   const ma = document.getElementById('selMes').value;
   if (!ma) return allTrans;
-  return allTrans.filter(t => String(t['Mes/Ano']||'') === ma);
+  return allTrans.filter(t => getMesAno(t) === ma);
 }
 
-// ââ KPIs ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderKPIs(trans) {
   const taxa_sar = resumo['Taxa_EUR_SAR'] || 4.3008;
 
-  // 1. Arabia SAR â apenas despesas (negativas), sem crÃ©ditos/reversÃµes
-  const totSAR = trans
-    .filter(t => t['Tipo']==='Cartao Credito' && v(t)<0)
-    .reduce((s,t) => s+Math.abs(v(t)), 0);
+  const totSAR = Math.abs(trans
+    .filter(t => t['Tipo']==='Cartao Credito')
+    .reduce((s,t) => s+v(t), 0));
 
-  // 2. Total Espanha EUR â apenas despesas "puras" (exclui Gorda/Pensao, que sÃ£o orÃ§amentos separados)
-  const EXCL_EUR = ['GordaEspanha','GordaBrasil','PensaoEnzo'];
   const totEUR = trans
-    .filter(t => t['Pais/Conta']==='Espanha' && v(t)<0 && !EXCL_EUR.includes(t['Categoria']||''))
+    .filter(t => t['Pais/Conta']==='Espanha' && v(t)<0)
     .reduce((s,t) => s+Math.abs(v(t)), 0);
 
-  // Valores reais de Gorda/Pensao no mÃªs (para saldo)
-  const gordaEspReal = trans.filter(t=>t['Categoria']==='GordaEspanha'&&v(t)<0).reduce((s,t)=>s+Math.abs(v(t)),0);
-  const gordaBraReal = trans.filter(t=>t['Categoria']==='GordaBrasil'&&v(t)<0).reduce((s,t)=>s+Math.abs(v(t)),0);
-  const pensaoReal   = trans.filter(t=>t['Categoria']==='PensaoEnzo'&&v(t)<0).reduce((s,t)=>s+Math.abs(v(t)),0);
-
-  // ââ OrÃ§amento EUR ââ
   const salarioEUR  = resumo['Receita_Salario_EUR'] || allOrc.filter(o=>o['Grupo']==='Receita'&&o['Descricao']==='Salario EUR').reduce((s,o)=>s+Math.abs(parseFloat(o['Valor']||0)),0);
   const gordaEspEUR = resumo['GordaEspanha_EUR_Orc'] || 0;
   const gordaBraEUR = resumo['GordaBrasil_EUR_Orc']  || 0;
   const pensaoEUR   = resumo['PensaoEnzo_EUR_Orc']   || 0;
   const valiEUR     = resumo['Valeria_Net_EUR']       || 0;
   const espOrcEUR   = resumo['Espanha_EUR_Orc']       || allOrc.filter(o=>o['Grupo']==='Espanha'&&o['Moeda']==='EUR').reduce((s,o)=>s+Math.abs(parseFloat(o['Valor']||0)),0);
+  const parcSAR     = allParc.filter(p=>p['Ativo']==='Sim').reduce((s,p)=>s+Math.abs(parseFloat(p['Valor_SAR']||0)),0);
+  const parcEUR     = parcSAR / taxa_sar;
 
-  // 3. Saldo atual = SalÃ¡rio â Espanha real â GordaEsp real â GordaBra real â Pensao real â Valeria
-  const saldoAtual = salarioEUR - totEUR - gordaEspReal - gordaBraReal - pensaoReal - valiEUR;
+  // Planned vs real por categoria para calcular o que ainda falta debitar
+  const currentMesAno = document.getElementById('selMes').value;
+  const EXCL_KPI = ['Gorda Brasil','Pensao Enzo','GordaBrasil','PensaoEnzo'];
+  const planByCat = {};
+  allOrc.filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR')
+    .forEach(o => { const c=o['Descricao']||'Outros'; planByCat[c]=(planByCat[c]||0)+calcPlanValue(o, currentMesAno); });
+  const realByCat = {};
+  trans.filter(t => t['Pais/Conta']==='Espanha' && !EXCL_KPI.includes(t['Categoria']||''))
+    .forEach(t => { const c=t['Categoria']||'Outros'; realByCat[c]=(realByCat[c]||0)+v(t); });
+  let prevNaoDebit = 0;
+  Object.entries(planByCat).forEach(([cat, plan]) => {
+    const realSpent = Math.max(0, -(realByCat[cat]||0));
+    if (realSpent < plan) prevNaoDebit += plan - realSpent;
+  });
 
-  // 4. PrÃ³ximo mÃªs = SalÃ¡rio â Espanha orc â GordaEspanha orc â GordaBrasil orc â Pensao orc â Valeria
-  const saldoProx = salarioEUR - espOrcEUR - gordaEspEUR - pensaoEUR - valiEUR - gordaBraEUR;
+
+
+  const saldoAtual  = salarioEUR - gordaEspEUR - totEUR   - pensaoEUR - valiEUR - gordaBraEUR;
+  const saldoPrev   = saldoAtual - prevNaoDebit;
+  const saldoProx   = salarioEUR - gordaEspEUR - espOrcEUR - pensaoEUR - valiEUR - gordaBraEUR - parcEUR;
 
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi red">
-      <div class="kpi-lbl">ð¸ð¦ Total Expenses<br>Saudi Arabia (mÃªs atual)</div>
-      <div class="kpi-val">${fmt(totSAR,0)} SAR</div>
-      <div class="kpi-sub">Ciclo SAB â lÃ­quido (excl. parcelamentos)</div>
-    </div>
-    <div class="kpi orange">
-      <div class="kpi-lbl">ðªð¸ Total Expenses<br>Spain (atÃ© o momento)</div>
-      <div class="kpi-val">â¬ ${fmt(totEUR,2)}</div>
-      <div class="kpi-sub">BBVA â despesas do mÃªs</div>
-    </div>
-    <div class="kpi green">
-      <div class="kpi-lbl">ð¶ Total Balance Spain<br>(mÃªs atual)</div>
-      <div class="kpi-val">â¬ ${fmt(saldoAtual,2)}</div>
-      <div class="kpi-sub">SalÃ¡rio â GordaEsp â Espanha real â PensÃ£o â Valeria â GordaBra</div>
-    </div>
-    <div class="kpi purple">
-      <div class="kpi-lbl">ð Total Balance Spain<br>(prÃ³ximo mÃªs)</div>
-      <div class="kpi-val">â¬ ${fmt(saldoProx,2)}</div>
-      <div class="kpi-sub">SalÃ¡rio â GordaEsp â Esp.orc â PensÃ£o â Valeria â GordaBra â Parc.</div>
-    </div>`;
+    <div class="kpi red"><div class="kpi-lbl">🇸🇦 Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">Ciclo SAB — líquido (excl. parcelamentos)</div></div>
+    <div class="kpi orange"><div class="kpi-lbl">🇪🇸 Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — despesas do mês</div></div>
+    <div class="kpi green"><div class="kpi-lbl">💶 Balance Spain<br>(real até agora)</div><div class="kpi-val">€ ${fmt(saldoAtual,2)}</div><div class="kpi-sub">Salário − GordaEsp − Real − Pensão − Valeria − GordaBra</div></div>
+    <div class="kpi blue"><div class="kpi-lbl">🔮 Balance Spain<br>(real + previsto mês)</div><div class="kpi-val">€ ${fmt(saldoPrev,2)}</div><div class="kpi-sub">Saldo real − Previsto não debitado (€ ${fmt(prevNaoDebit,2)})</div></div>
+    <div class="kpi purple"><div class="kpi-lbl">📅 Balance Spain<br>(próximo mês)</div><div class="kpi-val">€ ${fmt(saldoProx,2)}</div><div class="kpi-sub">Salário − GordaEsp − Esp.orc − Pensão − Valeria − GordaBra − Parc.</div></div>`;
 }
 
-// ââ CHART: ESPANHA â Plan vs Real (Espanha + GordaEspanha) âââââââââââââââââââ
-// Plan: Orcamento grupos Espanha + GordaEspanha (EUR apenas)
-// Real: transaÃ§Ãµes BBVA (Pais/Conta=Espanha, val<0) excl. GordaBrasil/PensaoEnzo
 function renderEspanha(trans) {
-  // â Plan â (apenas Espanha e GordaEspanha; sem GordaBrasil/PensaoEnzo)
+  const currentMesAno = document.getElementById('selMes').value;
   const planMap = {};
   allOrc
     .filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR')
     .forEach(o => {
       const cat = o['Descricao'] || 'Outros';
-      planMap[cat] = (planMap[cat]||0) + Math.abs(parseFloat(o['Valor']||0));
+      planMap[cat] = (planMap[cat]||0) + calcPlanValue(o, currentMesAno);
     });
 
-  // â Real â (exclui categorias GordaBrasil e PensaoEnzo do BBVA)
   const EXCL_CATS = ['Gorda Brasil','Pensao Enzo','GordaBrasil','PensaoEnzo'];
-  const realMap = {};
+  const realRaw = {};
   trans
-    .filter(t => t['Pais/Conta']==='Espanha' && v(t)<0
-      && !EXCL_CATS.includes(t['Categoria']||''))
+    .filter(t => t['Pais/Conta']==='Espanha' && !EXCL_CATS.includes(t['Categoria']||''))
     .forEach(t => {
       const cat = t['Categoria']||'Outros';
-      realMap[cat] = (realMap[cat]||0) + Math.abs(v(t));
+      realRaw[cat] = (realRaw[cat]||0) + v(t);
     });
+  const realMap = {};
+  Object.entries(realRaw).forEach(([c, net]) => { if (net < 0) realMap[c] = Math.abs(net); });
 
-  // Combina e ordena por plan desc
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
     .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-
-  mkChart('cEsp', {
-    type:'bar',
-    data:{
-      labels: cats,
-      datasets:[
-        { label:'Real (â¬)', data:cats.map(c=>realMap[c]||0), backgroundColor:'rgba(231,76,60,0.8)', borderRadius:3 },
-        { label:'Plan (â¬)', data:cats.map(c=>planMap[c]||0), backgroundColor:'rgba(39,174,96,0.7)', borderRadius:3 }
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{font:{size:10}}}},
-      scales:{
-        x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},
-        y:{grid:{color:'#eee'},ticks:{callback:n=>'â¬'+fmt(n,0)}}
-      }
-    }
-  });
+  mkChart('cEsp',{type:'bar',data:{labels:cats,datasets:[{label:'Real (€)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (€)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{grid:{color:'#eee'},ticks:{callback:n=>'€'+fmt(n,0)}}}}});
 }
 
-// ââ CHART: ARABIA â Plan vs Real ââââââââââââââââââââââââââââââââââââââââââââââ
 function renderArabia(trans) {
-  // â Plan (Orcamento Arabia) â
   const planMap = {};
-  // Parcelamentos total para "Compras Parceladas"
-  const parcTotal = allParc
-    .filter(p => p['Ativo']==='Sim')
-    .reduce((s,p) => s+Math.abs(parseFloat(p['Valor_SAR']||0)), 0);
-
-  allOrc
-    .filter(o => o['Grupo']==='Arabia' && o['Moeda']==='SAR')
-    .forEach(o => {
-      const cat = o['Descricao']||'Outros';
-      let val = Math.abs(parseFloat(o['Valor']||0));
-      if (cat==='Compras Parceladas') val = parcTotal;
-      planMap[cat] = (planMap[cat]||0) + val;
-    });
-  // SalÃ¡rio SAR removido do grÃ¡fico (distorce escala)
-
-  // â Real â (apenas despesas negativas por categoria)
-  const realMap = {};
-  trans
-    .filter(t => ((t['Pais/Conta']||'').includes('Arabia') || t['Moeda']==='SAR') && v(t)<0)
-    .forEach(t => {
-      const cat = t['Categoria']||'Outros';
-      realMap[cat] = (realMap[cat]||0) + Math.abs(v(t));
-    });
-
-  const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
-    .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-
-  mkChart('cArab', {
-    type:'bar',
-    data:{
-      labels: cats,
-      datasets:[
-        { label:'Real (SAR)', data:cats.map(c=>realMap[c]||0), backgroundColor:'rgba(231,76,60,0.8)', borderRadius:3 },
-        { label:'Plan (SAR)', data:cats.map(c=>planMap[c]||0), backgroundColor:'rgba(39,174,96,0.7)', borderRadius:3 }
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{font:{size:10}}}},
-      scales:{
-        x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},
-        y:{grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}
-      }
-    }
+  const parcTotal = allParc.filter(p => p['Ativo']==='Sim').reduce((s,p) => s+Math.abs(parseFloat(p['Valor_SAR']||0)), 0);
+  allOrc.filter(o => o['Grupo']==='Arabia' && o['Moeda']==='SAR').forEach(o => {
+    const cat = o['Descricao'] || 'Outros';
+    let val = Math.abs(parseFloat(o['Valor']||0));
+    if (cat==='Compras Parceladas') val = parcTotal;
+    planMap[cat] = (planMap[cat]||0) + val;
   });
+  const realRaw = {};
+  trans.filter(t => (t['Pais/Conta']||'').includes('Arabia') || t['Moeda']==='SAR').forEach(t => {
+    const cat = t['Categoria']||'Outros';
+    realRaw[cat] = (realRaw[cat]||0) + v(t);
+  });
+  const realMap = {};
+  Object.entries(realRaw).forEach(([c,val]) => { if (val<0) realMap[c]=Math.abs(val); });
+  const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])].sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
+  mkChart('cArab',{type:'bar',options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}}},data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]}});
 }
 
-// ââ PARCELAMENTOS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderParc() {
   const active = allParc.filter(p => p['Ativo']==='Sim');
-  if (!active.length) {
-    document.getElementById('parcWrap').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Nenhum parcelamento ativo</div>';
-    return;
-  }
+  if (!active.length) { document.getElementById('parcWrap').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Nenhum parcelamento ativo</div>'; return; }
   const now = new Date();
   const cols = [];
-  for (let i=0;i<6;i++) {
-    const d = new Date(now.getFullYear(), now.getMonth()+i, 1);
-    cols.push(`${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`);
-  }
-  // Calcula offset de inÃ­cio a partir de Mes_Inicio (ex: "Jul/26")
+  for (let i=0;i<6;i++) { const d=new Date(now.getFullYear(),now.getMonth()+i,2); cols.push(`${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`); }
   function startOffset(p) {
-    const mi = (p['Mes_Inicio']]||'').trim();
+    const mi = (p['Inicio']||p['Mes_Inicio']||'').trim();
     if (!mi) return 0;
     const [mm,yy] = mi.split('/');
     const mIdx = MESES.indexOf(mm);
     if (mIdx<0) return 0;
-    const diff = (2000+parseInt(yy) - now.getFullYear())*12 + mIdx - now.getMonth();
-    return Math.max(0, diff);
+    const diff = (2000+parseInt(yy)-now.getFullYear())*12 + mIdx - now.getMonth();
+    return Math.max(0,diff);
   }
   const tots = new Array(6).fill(0);
   const rows = active.map(p => {
-    const sar    = Math.abs(parseFloat(p['Valor_SAR']||0));
-    const cur    = parseInt(p['Parcela_Atual']||1);
-    const tot    = parseInt(p['Total_Parcelas']||1);
-    const left   = tot - cur + 1;
-    const offset = startOffset(p);
-    const cells = cols.map((_,i) => {
-      if (i>=offset && i<offset+left) { tots[i]+=sar; return `<td class="r neg">${fmt(sar,0)}</td>`; }
-      return `<td class="r" style="color:var(--muted)">â</td>`;
-    });
-    const desc = p['Descricao']||'â';
-    return `<tr>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc}</td>
-      <td class="r">${cur}/${tot}</td>
-      <td class="r">${fmt(sar*tot,0)}</td>
-      ${cells.join('')}
-    </tr>`;
+    const sar=Math.abs(parseFloat(p['Valor_SAR']||0)),cur=parseInt(p['Parcela_Atual']||1),tot=parseInt(p['Total_Parcelas']||1),left=tot-cur+1,offset=startOffset(p);
+    const cells=cols.map((_,i)=>{if(i>=offset&&i<offset+left){tots[i]+=sar;return `<td class="r neg">${fmt(sar,0)}</td>`;}return `<td class="r" style="color:var(--muted)">—</td>`;});
+    const desc=p['Descricao']||'—';
+    return `<tr><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc}</td><td class="r">${cur}/${tot}</td><td class="r">${fmt(sar*tot,0)}</td>${cells.join('')}</tr>`;
   }).join('');
-
-  document.getElementById('parcWrap').innerHTML = `
-    <table>
-      <thead><tr>
-        <th>Item</th><th class="r">Parc.</th><th class="r">Total</th>
-        ${cols.map(c=>`<th class="r">${c}</th>`).join('')}
-      </tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot><tr>
-        <td colspan="3">Total SAR/mÃªs</td>
-        ${tots.map(t=>`<td class="r">${fmt(t,0)}</td>`).join('')}
-      </tr></tfoot>
-    </table>`;
+  document.getElementById('parcWrap').innerHTML=`<table><thead><tr><th>Item</th><th class="r">Parc.</th><th class="r">Total</th>${cols.map(c=>`<th class="r">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3">Total SAR/mês</td>${tots.map(t=>`<td class="r">${fmt(t,0)}</td>`).join('')}</tr></tfoot></table>`;
 }
 
-// ââ INVESTIMENTOS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderInvest() {
-  const total   = resumo['Saldo_Poupanca_EUR'] || 0;
-  const falta   = resumo['Falta_Meta_EUR']     || 0;
-  const pct     = Math.min((total/200000)*100,100);
-  const meses   = resumo['Meses_Para_Meta']    || 0;
-  const previsao= resumo['Previsao_Meta']      || 'â';
-  const ritmo   = resumo['Ritmo_Jan2028_EUR']  || 0;
-
-  // Placeholder pie â dados reais virÃ£o do GetQuin (Page 2)
-  const placeholder = {
-    labels:['PoupanÃ§a total'],
-    datasets:[{data:[100], backgroundColor:['#27ae60'], borderWidth:0}]
-  };
-
-  document.getElementById('investWrap').innerHTML = `
-    <div class="invlest-total">
-      <div class="val">â¬ ${fmt(total,0)}</div>
-      <div class="lbl">PoupanÃ§a atual</div>
-    </div>
-    <canvas id="cPie" style="max-height:140px"></canvas>
-    <div style="margin-top:10px;font-size:.67rem;color:var(--muted);line-height:1.6">
-      <div>ð Falta: <b>â¬ ${fmt(falta,0)}</b> para meta â¬200k</div>
-      <div>ð PrevisÃ£o: <b>${previsao}</b> (${fmt(meses,1)} meses)</div>
-      <div>â¡ Ritmo p./ Jan/2028: <b>â¬ ${fmt(ritmo,0)}/mÃªs</b></div>
-      <div style="margin-top:6px;opacity:.6">Breakdown por ativo: em breve (GetQuin)</div>
-    </div>`;
-
-  // Barra de progresso simples no lugar do pie
-  const bar = document.createElement('div');
-  bar.style.cssText = 'background:#ede8e0;border-radius:8px;height:12px;margin:8px 0';
-  const fill = document.createElement('div');
-  fill.style.cssText = `background:var(--green);border-radius:8px;height:12px;width:${pct}%`;
-  bar.appendChild(fill);
-
-  const canvas = document.getElementById('cPie');
-  if (canvas) canvas.replaceWith(bar);
+  const total=resumo['Saldo_Poupanca_EUR']||0,falta=resumo['Falta_Meta_EUR']||0,pct=Math.min((total/200000)*100,100),meses=resumo['Meses_Para_Meta']||0,previsao=resumo['Previsao_Meta']||'—',ritmo=resumo['Ritmo_Jan2028_EUR']||0;
+  document.getElementById('investWrap').innerHTML=`
+  <div class="invest-total"><div class="val">€ ${fmt(total,0)}</div><div class="lbl">Poupança atual</div></div>
+  <div style="background:#ede8e0;border-radius:8px;height:12px;margin:8px 0"><div style="background:var(--green);border-radius:8px;height:12px;width:${pct}%"></div></div>
+  <div style="margin-top:10px;font-size:.67rem;color:var(--muted);line-height:1.6">
+    <div>📌 Falta: <b>€ ${fmt(falta,0)}</b> para meta €200k</div>
+    <div>📅 Previsão: <b>${previsao}</b> (${fmt(meses,1)} meses)</div>
+    <div>⚡ Ritmo p/ Jan/2028: <b>€ ${fmt(ritmo,0)}/mês</b></div>
+    <div style="margin-top:6px;opacity:.6">Breakdown por ativo: em breve (GetQuin)</div>
+  </div>`;
 }
 
-// ââ ARABIA REAL â barras horizontais ââââââââââââââââââââââââââââââââââââââââ
 function renderArabReal(trans) {
-  // Soma de despesas por categoria (apenas negativos)
   const raw = {};
-  trans
-    .filter(t => ((t['Pais/Conta']||'').includes('Arabia') || t['Moeda']==='SAR') && v(t)<0)
-    .forEach(t => {
-      const cat = t['Categoria']||'Outros';
-      raw[cat] = (raw[cat]||0) + Math.abs(v(t));
-    });
-
-  const sorted = Object.entries(raw)
-    .sort((a,b)=>b[1]-a[1]).slice(0,14);
-  if (!sorted.length) {
-    document.getElementById('arabRealWrap').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Sem dados SAR</div>';
-    return;
-  }
-  const max = sorted[0][1];
-  document.getElementById('arabRealWrap').innerHTML = sorted.map(([cat,val]) => {
-    const pct = (val/max)*100;
-    return `<div class="hb">
-      <div class="hb-lbl" title="${cat}">${cat}</div>
-      <div class="hb-track">
-        <div class="hb-fill" style="width:${pct}%">
-          <span class="hb-val">${fmt(val,0)}</span>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  trans.filter(t => t['Moeda']==='SAR').forEach(t => {
+    const cat=t['Categoria']||'Outros';
+    raw[cat]=(raw[cat]||0)+v(t);
+  });
+  const sorted=Object.entries(raw).filter(([,v])=>v<0).map(([c,v])=>[c,Math.abs(v)]).sort((a,b)=>b[1]-a[1]).slice(0,14);
+  if (!sorted.length) { document.getElementById('arabRealWrap').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Sem dados SAR</div>'; return; }
+  const max=sorted[0][1];
+  document.getElementById('arabRealWrap').innerHTML=sorted.map(([cat,val])=>`<div class="hb"><div class="hb-lbl" title="${cat}">${cat}</div><div class="hb-track"><div class="hb-fill" style="width:${(val/max)*100}%"><span class="hb-val">${fmt(val,0)}</span></div></div></div>`).join('');
 }
 
-// ââ APPLY âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function applyFilter() {
-  const trans = filtered();
+  const trans=filtered();
   renderKPIs(trans);
   renderEspanha(trans);
   renderArabia(trans);
   renderArabReal(trans);
 }
 
-// ââ INIT ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function init() {
   try {
-    [allTrans,allOrc,allParc] = await Promise.all([
-      gviz('Transacoes'), gviz('Orcamento'), gviz('Parcelamentos')
-    ]);
-    const resumoRows = await gviz('Resumo');
-    resumo = resumoRows.length ? resumoRows[resumoRows.length-1] : {};
-
-    const att = resumo['Data_Atualizacao'];
-    if (att) document.getElementById('lastUpdate').textContent='Atualizado: '+fmtDate(att);
-
+    [allTrans,allOrc,allParc]=await Promise.all([gviz('Transacoes'),gviz('Orcamento'),gviz('Parcelamentos')]);
+    applyRemaps(allTrans);
+    const resumoRows=await gviz('Resumo');
+    resumo=resumoRows.length?resumoRows[resumoRows.length-1]:{};
+    const att=resumo['Data_Atualizacao'];
+    if(att) document.getElementById('lastUpdate').textContent='Atualizado: '+fmtDate(att);
     buildSel();
     applyFilter();
     renderParc();
     renderInvest();
-
   } catch(e) {
     console.error(e);
-    document.getElementById('kpiRow').innerHTML=`
-      <div style="color:var(--red);padding:20px;grid-column:1/-1">
-        â Erro ao carregar. Verifique se a planilha estÃ¡ pÃºblica.<br>
-        <small>${e.message}</small>
-      </div>`;
+    document.getElementById('kpiRow').innerHTML=`<div style="color:var(--red);padding:20px;grid-column:1/-1">❌ Erro ao carregar. Verifique se a planilha está pública.<br><small>${e.message}</small></div>`;
   }
 }
 
