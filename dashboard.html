@@ -262,9 +262,9 @@ function renderKPIs(trans) {
     .filter(t => t['Tipo']==='Cartao Credito')
     .reduce((s,t) => s+v(t), 0));
 
-  const totEUR = trans
-    .filter(t => t['Pais/Conta']==='Espanha' && v(t)<0)
-    .reduce((s,t) => s+Math.abs(v(t)), 0);
+  const espTrans = trans.filter(t => t['Pais/Conta']==='Espanha' && v(t)<0);
+  console.log('ESP transactions:', espTrans.map(t => `${t['Descricao']||t['Categoria']} | ${t['Categoria']} | ${v(t)}`));
+  const totEUR = espTrans.reduce((s,t) => s+Math.abs(v(t)), 0);
 
   const salarioEUR  = resumo['Receita_Salario_EUR'] || allOrc.filter(o=>o['Grupo']==='Receita'&&o['Descricao']==='Salario EUR').reduce((s,o)=>s+Math.abs(parseFloat(o['Valor']||0)),0);
   const gordaEspEUR = resumo['GordaEspanha_EUR_Orc'] || 0;
