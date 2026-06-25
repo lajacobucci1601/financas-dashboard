@@ -414,10 +414,10 @@ function renderParc() {
 const PALETTE = ['#4A90D9','#F5A623','#7ED321','#F7931A','#9B59B6','#1ABC9C','#E74C3C','#3498DB','#E67E22','#2ECC71','#E91E63','#00BCD4','#FF5722','#607D8B','#8BC34A','#FFC107','#795548','#9E9E9E'];
 
 function renderInvest() {
-  const total=resumo['Saldo_Poupanca_EUR']||0,falta=resumo['Falta_Meta_EUR']||0,pct=Math.min((total/200000)*100,100),meses=resumo['Meses_Para_Meta']||0,previsao=resumo['Previsao_Meta']||'—',ritmo=resumo['Ritmo_Jan2028_EUR']||0;
-
   const ativos = allPortfolio.filter(p => p['Ativo'] && parseFloat(p['Valor_EUR']||0)>0);
   const totalPort = ativos.reduce((s,p)=>s+parseFloat(p['Valor_EUR']||0),0);
+  const total = totalPort || resumo['Saldo_Poupanca_EUR']||0;
+  const falta=resumo['Falta_Meta_EUR']||0,pct=Math.min((total/200000)*100,100),meses=resumo['Meses_Para_Meta']||0,previsao=resumo['Previsao_Meta']||'—',ritmo=resumo['Ritmo_Jan2028_EUR']||0;
 
   const donutHtml = ativos.length ? `
     <div style="display:flex;align-items:center;gap:10px;margin:10px 0">
