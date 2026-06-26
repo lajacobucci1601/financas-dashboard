@@ -136,7 +136,7 @@ const _ch     = {};
 
 const REMAPS = [
   { test: t => (t['Descricao']||'').toLowerCase().includes('amortizacion de prestamo'), cat: 'Lavanderia' },
-  { test: t => Math.abs(parseFloat(t['Valor']||0)) === 70 && t['Pais/Conta'] === 'Espanha',  cat: 'Garagem'   },
+  { test: t => Math.abs(parseFloat(t['Valor']||0)) === 70 && t['Grupo'] === 'Espanha',  cat: 'Garagem'   },
 ];
 function applyRemaps(rows) {
   rows.forEach(t => { REMAPS.forEach(r => { if (r.test(t)) t['Categoria'] = r.cat; }); });
@@ -261,19 +261,19 @@ function renderKPIs(trans) {
 
   // SAR: todas despesas Arabia (cartão + aluguel + débitos)
   const totSAR = Math.abs(trans
-    .filter(t => ((t['Pais/Conta']||'').includes('Arabia') || t['Moeda']==='SAR') && v(t)<0)
+    .filter(t => (t['Grupo']==='Arabia Saudita' || t['Moeda_Class']==='SAR') && v(t)<0)
     .reduce((s,t) => s+v(t), 0));
 
   // EUR: despesas reais em Espanha, líquido de Extras positivos (reembolsos/entradas de Extras
   // reduzem a despesa mas não são salário — evita dupla contagem)
-  const totEURbruto = trans.filter(t => t['Pais/Conta']==='Espanha' && v(t)<0)
+  const totEURbruto = trans.filter(t => t['Grupo']==='Espanha' && v(t)<0)
     .reduce((s,t) => s+Math.abs(v(t)), 0);
-  const extrasPos = trans.filter(t => t['Pais/Conta']==='Espanha' && v(t)>0 && (t['Categoria']||'')==='Extras')
+  const extrasPos = trans.filter(t => t['Grupo']==='Espanha' && v(t)>0 && (t['Categoria']||'')==='Extras')
     .reduce((s,t) => s+v(t), 0);
   const totEUR = totEURbruto - extrasPos;
 
   // Receita real = transações positivas em Espanha excluindo Extras (não é salário)
-  const receitasRealTotal = trans.filter(t => t['Pais/Conta']==='Espanha' && v(t)>0 && (t['Categoria']||'')!=='Extras')
+  const receitasRealTotal = trans.filter(t => t['Grupo']==='Espanha' && v(t)>0 && (t['Categoria']||'')!=='Extras')
     .reduce((s,t) => s+v(t), 0);
   const receitasOrcTotal = allOrc.filter(o => o['Grupo']==='Receita' && o['Ativo']==='Sim')
     .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
@@ -288,7 +288,7 @@ function renderKPIs(trans) {
   allOrc.filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR')
     .forEach(o => { const c=o['Descricao']||'Outros'; planByCat[c]=(planByCat[c]||0)+calcPlanValue(o, currentMesAno); });
   const realByCat = {};
-  trans.filter(t => t['Pais/Conta']==='Espanha')
+  trans.filter(t => t['Grupo']==='Espanha')
     .forEach(t => { const c=t['Categoria']||'Outros'; realByCat[c]=(realByCat[c]||0)+v(t); });
   let prevNaoDebit = 0;
   Object.entries(planByCat).forEach(([cat, plan]) => {
@@ -374,7 +374,7 @@ function renderEspanha(trans) {
 
   const realRaw = {};
   trans
-    .filter(t => t['Pais/Conta']==='Espanha')
+    .filter(t => t['Grupo']==='Espanha')
     .forEach(t => {
       const cat = t['Categoria']||'Outros';
       realRaw[cat] = (realRaw[cat]||0) + v(t);
@@ -397,7 +397,7 @@ function renderArabia(trans) {
     planMap[cat] = (planMap[cat]||0) + val;
   });
   const realRaw = {};
-  trans.filter(t => (t['Pais/Conta']||'').includes('Arabia') || t['Moeda']==='SAR').forEach(t => {
+  trans.filter(t => t['Grupo']==='Arabia Saudita' || t['Moeda_Class']==='SAR').forEach(t => {
     const cat = t['Categoria']||'Outros';
     realRaw[cat] = (realRaw[cat]||0) + v(t);
   });
@@ -493,7 +493,7 @@ function renderInvest() {
 
 function renderArabReal(trans) {
   const raw = {};
-  trans.filter(t => t['Moeda']==='SAR').forEach(t => {
+  trans.filter(t => t['Moeda_Class']==='SAR').forEach(t => {
     const cat=t['Categoria']||'Outros';
     raw[cat]=(raw[cat]||0)+v(t);
   });
