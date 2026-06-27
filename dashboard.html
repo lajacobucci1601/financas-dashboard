@@ -259,10 +259,19 @@ function renderKPIs(trans) {
   const taxa_sar = resumo['Taxa_EUR_SAR'] || 4.3008;
   const taxa_brl = resumo['Taxa_EUR_BRL'] || 6.2;
 
-  // SAR: todas despesas Arabia (cartão + aluguel + débitos)
-  const totSAR = Math.abs(trans
-    .filter(t => (t['Grupo']==='Arabia Saudita' || t['Moeda_Class']==='SAR') && v(t)<0)
+  // SAR Total Expenses (mês selecionado):
+  //   1) Tudo que é SAB_Card na aba Transacoes (coluna Valor) do mês selecionado
+  //   2) + Aluguel (KSA) da aba Orcamento
+  //   3) + Compras Parceladas do mês SEGUINTE ao selecionado (aba Parcelamentos)
+  // (addN e parcForMes são declaradas mais abaixo — function declarations são içadas/hoisted)
+  const selMesSAR = document.getElementById('selMes').value;
+  const sabCardSAR = Math.abs(trans
+    .filter(t => (t['Conta']||t['conta'])==='SAB_Card')
     .reduce((s,t) => s+v(t), 0));
+  const aluguelKSA = Math.abs(parseFloat(
+    (allOrc.find(o => (o['Descricao']||'')==='Aluguel (KSA)')||{})['Valor'] || 0));
+  const parcSeguinteSAR = parcForMes(addN(selMesSAR, 1));
+  const totSAR = sabCardSAR + aluguelKSA + parcSeguinteSAR;
 
   // EUR: despesas reais em Espanha, líquido de Extras positivos (reembolsos/entradas de Extras
   // reduzem a despesa mas não são salário — evita dupla contagem)
@@ -344,7 +353,7 @@ function renderKPIs(trans) {
 
   const proxLabel = mesProx || 'próximo';
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi red"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">Todas despesas Arabia (cartão + aluguel + débitos)</div></div>
+    <div class="kpi red"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">SAB_Card do mês + Aluguel (KSA) + Parcelas ${addN(selMesSAR,1)||''}</div></div>
     <div class="kpi orange"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/es.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — despesas do mês</div></div>
     <div class="kpi green"><div class="kpi-lbl">💶 Balance Spain<br>(real até agora)</div><div class="kpi-val">€ ${fmt(saldoAtual,2)}</div><div class="kpi-sub">Receita real − Despesas reais</div></div>
     <div class="kpi blue"><div class="kpi-lbl">🔮 Balance Spain<br>(real + previsto mês)</div><div class="kpi-val">€ ${fmt(saldoPrev,2)}</div><div class="kpi-sub">Saldo real − Previsto não debitado (€ ${fmt(prevNaoDebit,2)})</div></div>
