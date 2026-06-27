@@ -268,11 +268,14 @@ function renderKPIs(trans) {
   const sabCardSAR = Math.abs(trans
     .filter(t => (t['Conta']||t['conta'])==='SAB_Card')
     .reduce((s,t) => s+v(t), 0));
-  // Aluguel KSA: aceita variações ("Aluguel (KSA)", "Aluguel (Arabia)") — busca por
-  // qualquer linha SAR/Arabia no Orcamento cuja Descricao contenha "aluguel"
+  // Aluguel KSA: na aba Orcamento o nome "Aluguel (KSA)" fica na coluna Sub_Descricao
+  // (a coluna Descricao tem a categoria, ex: "Moradia (Fixo)"). Busca robusta por
+  // "aluguel" + "ksa" em Sub_Descricao/Descricao.
   const aluguelKSA = allOrc
-    .filter(o => (o['Descricao']||'').toLowerCase().includes('aluguel')
-      && (o['Grupo']==='Arabia' || o['Moeda']==='SAR'))
+    .filter(o => {
+      const d = (o['Sub_Descricao']||o['Descricao']||'').toLowerCase();
+      return d.includes('aluguel') && d.includes('ksa');
+    })
     .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
   const parcSeguinteSAR = parcForMes(addN(selMesSAR, 1));
   const totSAR = sabCardSAR + aluguelKSA + parcSeguinteSAR;
@@ -498,7 +501,7 @@ function renderInvest() {
       options:{
         responsive:false,
         cutout:'70%',
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed;const pct=(v/totalPort*100).toFixed(1);return ` ${ctx.label}: € ${fmt(v,0)} (${pct}%)`;}}}},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const vv=ctx.parsed;const pc=(vv/totalPort*100).toFixed(1);return ` ${ctx.label}: € ${fmt(vv,0)} (${pc}%)`;}}}},
         animation:{duration:600}
       }
     });
