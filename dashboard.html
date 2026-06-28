@@ -294,10 +294,11 @@ function renderKPIs(trans) {
     .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
   const receitaAtual = receitasRealTotal > 0 ? receitasRealTotal : receitasOrcTotal;
 
-  // Saldo atualizado (real até agora): Grupo="Espanha" + Conta="BBVA", soma de TODOS os
-  // valores INCLUINDO o Salário (Sub_Categoria) — é o totEUR acima + as entradas de salário
+  // Saldo atualizado (real até agora): soma de TODOS os valores da Conta="BBVA" do mês,
+  // independente do Grupo — assim inclui o Salário (que cai no BBVA, mas tem Grupo
+  // "Arabia Saudita"). É o totEUR (despesas Espanha/BBVA) + as entradas de salário.
   const saldoAtual = trans
-    .filter(t => t['Grupo']==='Espanha' && (t['Conta']||t['conta'])==='BBVA')
+    .filter(t => (t['Conta']||t['conta'])==='BBVA')
     .reduce((s,t) => s+v(t), 0);
 
   // Previsto não debitado (despesas planeadas que ainda não saíram)
