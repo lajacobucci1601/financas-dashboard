@@ -280,13 +280,10 @@ function renderKPIs(trans) {
   const parcSeguinteSAR = parcForMes(addN(selMesSAR, 1));
   const totSAR = sabCardSAR + aluguelKSA + parcSeguinteSAR;
 
-  // EUR: despesas reais em Espanha, líquido de Extras positivos (reembolsos/entradas de Extras
-  // reduzem a despesa mas não são salário — evita dupla contagem)
-  const totEURbruto = trans.filter(t => t['Grupo']==='Espanha' && v(t)<0)
-    .reduce((s,t) => s+Math.abs(v(t)), 0);
-  const extrasPos = trans.filter(t => t['Grupo']==='Espanha' && v(t)>0 && (t['Categoria']||'')==='Extras')
-    .reduce((s,t) => s+v(t), 0);
-  const totEUR = totEURbruto - extrasPos;
+  // EUR Total Expenses (mês selecionado): Grupo="Espanha" + Conta="BBVA", soma de todas as despesas
+  const totEUR = Math.abs(trans
+    .filter(t => t['Grupo']==='Espanha' && (t['Conta']||t['conta'])==='BBVA' && v(t)<0)
+    .reduce((s,t) => s+v(t), 0));
 
   // Receita real = transações positivas em Espanha excluindo Extras (não é salário)
   const receitasRealTotal = trans.filter(t => t['Grupo']==='Espanha' && v(t)>0 && (t['Categoria']||'')!=='Extras')
