@@ -100,6 +100,7 @@ tfoot td.r { text-align:right; color:var(--red); }
 <div class="kpi-row" id="kpiRow">
   <div class="loading" style="grid-column:1/-1"><div class="spin"></div>Carregando...</div>
 </div>
+<div id="dbg" style="padding:4px 20px 8px;font-size:.62rem;color:#666;white-space:pre-wrap;font-family:monospace"></div>
 
 <!-- Charts -->
 <div class="row1">
@@ -319,11 +320,19 @@ function renderKPIs(trans) {
   trans.filter(t => t['Grupo']==='Espanha')
     .forEach(t => { const k=t['Sub_Categoria']||t['Categoria']||'Outros'; realBySub[k]=(realBySub[k]||0)+v(t); });
   let prevNaoDebit = 0;
+  const dbgLines = [];
   Object.entries(planBySub).forEach(([k, plan]) => {
+    if (plan<=0) return;
     const realSpent = Math.max(0, -(realBySub[k]||0));
-    if (realSpent < plan) prevNaoDebit += plan - realSpent;
+    const naoDeb = realSpent < plan ? plan - realSpent : 0;
+    if (naoDeb>0) prevNaoDebit += naoDeb;
+    dbgLines.push(`${k.padEnd(38).slice(0,38)} plan=${plan.toFixed(2).padStart(9)} real=${realSpent.toFixed(2).padStart(9)} naoDeb=${naoDeb.toFixed(2).padStart(9)}`);
   });
   const saldoPrev = saldoAtual - prevNaoDebit;
+  const dbgEl = document.getElementById('dbg');
+  if (dbgEl) dbgEl.textContent =
+    `DEBUG mês=${currentMesAno}  saldoAtual=${saldoAtual.toFixed(2)}  prevNaoDebit=${prevNaoDebit.toFixed(2)}  saldoPrev=${saldoPrev.toFixed(2)}\n`
+    + `--- Itens planejados (Orcamento Espanha) que entram no mês ---\n` + dbgLines.join('\n');
 
   // Próximo mês: receitas planejadas − todas despesas planejadas (EUR + SAR + BRL)
   // Periódicos só no mês devido. Parcelas = mês exibido + 1.
