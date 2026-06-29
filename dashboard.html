@@ -371,14 +371,31 @@ function renderKPIs(trans) {
   let saldoProx = 0;
   console.log(`\n=== SALDO PLANEJADO DEBUG (${mesProx}) ===`);
   console.log(`Taxa SAR: ${taxa_sar}, Taxa BRL: ${taxa_brl}`);
+  console.log(`\n--- DEBUG: Parsing de Datas ---`);
   allOrc.filter(o => o['Ativo']==='Sim').forEach(o => {
-    const ultimaCobranca = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
+    const mesAnoRaw = o['Mes/Ano'] || o['Mês/Ano'];
+    const ultimaCobranca = parseMesAno(mesAnoRaw);
     const periodo = parsePeriodo(o);
+
+    // Log detalhado de cada parsing
+    if (periodo && periodo > 1) {
+      console.log(`[PARSE] ${o['Descricao']||'?'} | Raw:"${mesAnoRaw}" → Parseado:"${ultimaCobranca}" | Período:${periodo}m`);
+      if (ultimaCobranca) {
+        let temp = ultimaCobranca;
+        let ocorrencias = [];
+        for (let i = 0; i < 12; i++) {
+          ocorrencias.push(temp);
+          temp = addMeses(temp, periodo);
+        }
+        console.log(`        Ocorrências: ${ocorrencias.join(', ')}`);
+      }
+    }
+
     const planVal = calcPlanValue(o, mesProx);
     if (planVal === 0) {
       if (periodo && periodo > 1 && ultimaCobranca) {
         const proxCobranca = addMeses(ultimaCobranca, periodo);
-        console.log(`SKIP (não cai em ${mesProx}): ${o['Descricao']||'?'} | Mes/Ano:${o['Mes/Ano']||'?'} → Parseado:${ultimaCobranca} | Próx:${proxCobranca} (período:${periodo}m)`);
+        console.log(`✗ SKIP: ${o['Descricao']||'?'} | não cai em ${mesProx} (próxima:${proxCobranca})`);
       }
       return;
     }
@@ -389,10 +406,11 @@ function renderKPIs(trans) {
     else if (moeda === 'BRL') valEUR = valEUR / taxa_brl;
     if (rawVal < 0) valEUR = -valEUR;
     const tipo = rawVal > 0 ? 'Receita' : 'Despesa';
-    const periodoStr = periodo && periodo > 1 ? ` (${periodo}m, próx:${ultimaCobranca ? addMeses(ultimaCobranca, periodo) : '?'})` : '';
+    const periodoStr = periodo && periodo > 1 ? ` (${periodo}m)` : '';
     console.log(`✓ ${tipo}: ${o['Descricao']||'?'} | Valor:${rawVal} ${moeda} | valEUR:${valEUR.toFixed(2)}${periodoStr}`);
     saldoProx += valEUR;
   });
+  console.log(`\n--- FIM DEBUG ---\n`);
   const parcProxSAR = parcForMes(mesParc);
   const parcProxEUR = parcProxSAR / taxa_sar;
   console.log(`\n- Parcelas (${mesParc}): ${parcProxSAR} SAR = ${parcProxEUR.toFixed(2)} EUR`);
