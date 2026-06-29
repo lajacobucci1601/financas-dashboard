@@ -100,7 +100,6 @@ tfoot td.r { text-align:right; color:var(--red); }
 <div class="kpi-row" id="kpiRow">
   <div class="loading" style="grid-column:1/-1"><div class="spin"></div>Carregando...</div>
 </div>
-<div id="dbg" style="padding:4px 20px 8px;font-size:.62rem;color:#666;white-space:pre-wrap;font-family:monospace"></div>
 
 <!-- Charts -->
 <div class="row1">
@@ -183,6 +182,7 @@ function mkChart(id, cfg) {
 }
 
 let allTrans=[], allOrc=[], allParc=[], allPortfolio=[], resumo={};
+let taxa_sar_live=null, taxa_brl_live=null;
 
 function parseMesAno(val) {
   if (!val) return null;
@@ -258,8 +258,8 @@ function filtered() {
 }
 
 function renderKPIs(trans) {
-  const taxa_sar = resumo['Taxa_EUR_SAR'] || 4.3008;
-  const taxa_brl = resumo['Taxa_EUR_BRL'] || 6.2;
+  const taxa_sar = taxa_sar_live || resumo['Taxa_EUR_SAR'] || 4.3008;
+  const taxa_brl = taxa_brl_live || resumo['Taxa_EUR_BRL'] || 6.2;
 
   const selMesSAR = document.getElementById('selMes').value;
   const sabCardSAR = Math.abs(trans
@@ -308,19 +308,13 @@ function renderKPIs(trans) {
   trans.filter(t => t['Grupo']==='Espanha')
     .forEach(t => { const k=t['Sub_Categoria']||t['Categoria']||'Outros'; realBySub[k]=(realBySub[k]||0)+v(t); });
   let prevNaoDebit = 0;
-  const dbgLines = [];
   Object.entries(planBySub).forEach(([k, plan]) => {
     if (plan<=0) return;
     const realSpent = Math.max(0, -(realBySub[k]||0));
     const naoDeb = realSpent > 0 ? 0 : plan;
     if (naoDeb>0) prevNaoDebit += naoDeb;
-    dbgLines.push(`${k.padEnd(34).slice(0,34)} plan=${plan.toFixed(2).padStart(9)} real=${realSpent.toFixed(2).padStart(9)} naoDeb=${naoDeb.toFixed(2).padStart(9)}`);
   });
   const saldoPrev = saldoAtual - prevNaoDebit;
-  const dbgEl = document.getElementById('dbg');
-  if (dbgEl) dbgEl.textContent =
-    `DEBUG mês=${currentMesAno}  saldoAtual=${saldoAtual.toFixed(2)}  prevNaoDebit=${prevNaoDebit.toFixed(2)}  saldoPrev=${saldoPrev.toFixed(2)}\n`
-    + `--- Itens planejados (Orcamento Espanha) que entram no mês ---\n` + dbgLines.join('\n');
 
   function mesIdxFn(mesAno) {
     const [m, y] = mesAno.split('/');
@@ -350,20 +344,21 @@ function renderKPIs(trans) {
     }, 0);
   }
 
-  const gordaEspOrc = allOrc.filter(o => o['Grupo']==='GordaEspanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim')
-    .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
-  const gordaBraOrc = allOrc.filter(o => o['Grupo']==='GordaBrasil' && o['Moeda']==='EUR' && o['Ativo']==='Sim')
-    .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
-  const brlTotal = allOrc.filter(o => o['Moeda']==='BRL' && o['Ativo']==='Sim')
-    .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
-  const espProxEUR = allOrc.filter(o => o['Grupo']==='Espanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim')
-    .reduce((s,o) => s+calcPlanValue(o, mesProx||currentMesAno), 0);
-  const arabSAR = allOrc.filter(o => o['Grupo']==='Arabia' && o['Moeda']==='SAR' && o['Ativo']==='Sim' && o['Descricao']!=='Compras Parceladas')
-    .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
+  let saldoProx = 0;
+  allOrc.filter(o => o['Ativo']==='Sim').forEach(o => {
+    const planVal = calcPlanValue(o, mesProx);
+    if (planVal === 0) return;
+    const moeda = o['Moeda'] || 'EUR';
+    const rawVal = parseFloat(o['Valor'] || 0);
+    let valEUR = planVal;
+    if (moeda === 'SAR') valEUR = valEUR / taxa_sar;
+    else if (moeda === 'BRL') valEUR = valEUR / taxa_brl;
+    if (rawVal > 0) saldoProx += valEUR;
+    else saldoProx -= valEUR;
+  });
   const parcProxSAR = parcForMes(mesParc);
-
-  const saldoProx = receitasOrcTotal - gordaEspOrc - espProxEUR - gordaBraOrc
-                  - (arabSAR/taxa_sar) - (parcProxSAR/taxa_sar) - (brlTotal/taxa_brl);
+  const parcProxEUR = parcProxSAR / taxa_sar;
+  saldoProx -= parcProxEUR;
 
   const proxLabel = mesProx || 'próximo';
   document.getElementById('kpiRow').innerHTML = `
@@ -371,7 +366,7 @@ function renderKPIs(trans) {
     <div class="kpi orange"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/es.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — saldo do mês (sem Salário)</div></div>
     <div class="kpi green"><div class="kpi-lbl">💶 Balance Spain<br>(real até agora)</div><div class="kpi-val">€ ${fmt(saldoAtual,2)}</div><div class="kpi-sub">BBVA — saldo do mês (com Salário)</div></div>
     <div class="kpi blue"><div class="kpi-lbl">🔮 Balance Spain<br>(real + previsto mês)</div><div class="kpi-val">€ ${fmt(saldoPrev,2)}</div><div class="kpi-sub">Saldo real − Previsto não debitado (€ ${fmt(prevNaoDebit,2)})</div></div>
-    <div class="kpi purple"><div class="kpi-lbl">📅 Balance Spain<br>(${proxLabel})</div><div class="kpi-val">€ ${fmt(saldoProx,2)}</div><div class="kpi-sub">Receitas orc. − Esp − GordaEsp − Arabia SAR − Parc.${mesParc||''} − BRL − GordaBra</div></div>`;
+    <div class="kpi purple"><div class="kpi-lbl">📅 Saldo Planejado<br>${proxLabel}</div><div class="kpi-val">€ ${fmt(saldoProx,2)}</div><div class="kpi-sub">Orçamento (todas as moedas) − Parcelas (${mesParc||''})</div></div>`;
 }
 
 function renderEspanha(trans) {
@@ -533,6 +528,20 @@ function applyFilter() {
   renderArabReal(trans);
 }
 
+async function fetchLiveRates() {
+  try {
+    const resp = await fetch('https://open.er-api.com/v6/latest/EUR');
+    if (!resp.ok) throw new Error('API erro');
+    const data = await resp.json();
+    taxa_sar_live = data.rates.SAR;
+    taxa_brl_live = data.rates.BRL;
+  } catch(e) {
+    console.warn('Não conseguiu buscar taxas ao vivo, usando fallback:', e.message);
+    taxa_sar_live = null;
+    taxa_brl_live = null;
+  }
+}
+
 async function init() {
   try {
     [allTrans,allOrc,allParc,allPortfolio]=await Promise.all([gviz('Transacoes'),gviz('Orcamento'),gviz('Parcelamentos'),gviz('Portfolio').catch(()=>[])]);
@@ -541,6 +550,7 @@ async function init() {
     resumo=resumoRows.length?resumoRows[resumoRows.length-1]:{};
     const att=resumo['Data_Atualizacao'];
     if(att) document.getElementById('lastUpdate').textContent='Atualizado: '+fmtDate(att);
+    await fetchLiveRates();
     buildSel();
     applyFilter();
     renderParc();
