@@ -27,7 +27,7 @@ header .sub { font-size:0.7rem; opacity:.55; }
 .ctrl select { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:5px; padding:4px 10px; font-size:.78rem; cursor:pointer; }
 .ctrl select option { background:var(--bar); }
 
-/* KPIs — 4 colunas */
+/* KPIs — 5 colunas */
 .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; padding:12px 20px 8px; }
 .kpi { background:var(--card); border-radius:10px; padding:13px 16px; box-shadow:var(--shadow); border-top:3px solid var(--blue); }
 .kpi.red    { border-top-color:var(--red); }
@@ -40,7 +40,7 @@ header .sub { font-size:0.7rem; opacity:.55; }
 .kpi-sub { font-size:.64rem; color:var(--muted); margin-top:3px; line-height:1.4; }
 
 /* ROWS */
-.row1 { display:grid; grid-template-columns:3fr 2fr; gap:10px; padding:0 20px 8px; }
+.row1 { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 20px 8px; }
 .row2 { display:grid; grid-template-columns:5fr 3fr 4fr; gap:10px; padding:0 20px 18px; }
 .card { background:var(--card); border-radius:10px; padding:14px; box-shadow:var(--shadow); }
 .card-title { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; margin-bottom:10px; padding-bottom:7px; border-bottom:1px solid var(--border); }
@@ -68,7 +68,6 @@ tfoot td.r { text-align:right; color:var(--red); }
 .invest-total { text-align:center; margin-bottom:8px; }
 .invest-total .val { font-size:1.4rem; font-weight:700; color:var(--green); }
 .invest-total .lbl { font-size:.68rem; color:var(--muted); }
-.invest-legend { font-size:.65rem; color:var(--muted); text-align:center; margin-top:6px; }
 
 /* LOADING */
 .loading { text-align:center; padding:24px; color:var(--muted); font-size:.8rem; }
@@ -225,10 +224,8 @@ function calcPlanValue(o, currentMesAno) {
   const val = Math.abs(parseFloat(o['Valor'] || 0));
   const dataInicio = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
   if (!dataInicio) return val;
-
   const periodo = parsePeriodo(o);
   if (!periodo || periodo <= 1) return val;
-
   let proxOcorrencia = dataInicio;
   for (let i = 0; i < 60; i++) {
     if (proxOcorrencia === currentMesAno) return val;
