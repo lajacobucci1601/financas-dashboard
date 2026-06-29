@@ -189,6 +189,21 @@ function parseMesAno(val) {
   const s = String(val);
   const m = s.match(/Date\((\d+),(\d+),\d+\)/);
   if (m) return `${MESES[+m[2]]}/${String(+m[1]).slice(2)}`;
+  // Handle Google Sheets m/d/yyyy format (e.g., "4/1/2026" = April 1, 2026)
+  const m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m2) {
+    const month = parseInt(m2[1]) - 1; // Convert to 0-based index for MESES
+    const year = m2[3];
+    return `${MESES[month]}/${String(year).slice(2)}`;
+  }
+  // Handle format like "Fev-26", "Abr-26", "Jun-26"
+  const m3 = s.match(/^([A-Z][a-z]{2})-(\d{2})$/);
+  if (m3) {
+    const mesNome = m3[1];
+    const year = m3[2];
+    const mesIdx = MESES.indexOf(mesNome);
+    if (mesIdx >= 0) return `${mesNome}/${year}`;
+  }
   return s.trim();
 }
 
@@ -213,18 +228,27 @@ function parsePeriodo(o) {
 }
 
 // Retorna o valor de plano ajustado para despesas periódicas.
-// Lê Periodicidade ("Semestral"/"Trimestral"/número) e Mes/Ano (última cobrança).
-// Só retorna o valor no mês em que a próxima cobrança cai.
+// Lê Periodicidade ("Semestral"/"Trimestral"/número) e Mes/Ano (data de início).
+// Retorna o valor se o mês atual cai em uma ocorrência periódica.
 function calcPlanValue(o, currentMesAno) {
   const val = Math.abs(parseFloat(o['Valor'] || 0));
-  const ultimaCobranca = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
-  if (!ultimaCobranca) return val; // sem última cobrança → mensal normal
+  const dataInicio = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
+  if (!dataInicio) return val; // sem data de início → mensal normal
 
   const periodo = parsePeriodo(o);
   if (!periodo || periodo <= 1) return val; // mensal normal
 
-  const proxCobranca = addMeses(ultimaCobranca, periodo);
-  return proxCobranca === currentMesAno ? val : 0;
+  // Verificar se currentMesAno cai em uma ocorrência periódica começando de dataInicio
+  let proxOcorrencia = dataInicio;
+  for (let i = 0; i < 60; i++) { // máximo 60 períodos = 5 anos
+    if (proxOcorrencia === currentMesAno) return val;
+    proxOcorrencia = addMeses(proxOcorrencia, periodo);
+    // Se já passou muito além, parar
+    const [m, y] = currentMesAno.split('/');
+    const [m2, y2] = proxOcorrencia.split('/');
+    if (parseInt(y2 + m2) > parseInt(y + m) + 50) break; // muito no futuro
+  }
+  return 0;
 }
 
 function getMesAno(t) {
@@ -328,8 +352,8 @@ function renderKPIs(trans) {
     const t = fy*12 + MESES.indexOf(m) + n;
     return `${MESES[t%12]}/${String(Math.floor(t/12)).slice(2)}`;
   }
-  const mesProx = addN(currentMesAno, 1);
-  const mesParc = addN(currentMesAno, 2);
+  const mesProx = addN(currentMesAno, 2);
+  const mesParc = addN(currentMesAno, 3);
 
   function parcForMes(target) {
     if (!target) return 0;
@@ -347,9 +371,34 @@ function renderKPIs(trans) {
   let saldoProx = 0;
   console.log(`\n=== SALDO PLANEJADO DEBUG (${mesProx}) ===`);
   console.log(`Taxa SAR: ${taxa_sar}, Taxa BRL: ${taxa_brl}`);
+  console.log(`\n--- DEBUG: Parsing de Datas ---`);
   allOrc.filter(o => o['Ativo']==='Sim').forEach(o => {
+    const mesAnoRaw = o['Mes/Ano'] || o['Mês/Ano'];
+    const ultimaCobranca = parseMesAno(mesAnoRaw);
+    const periodo = parsePeriodo(o);
+
+    // Log detalhado de cada parsing
+    if (periodo && periodo > 1) {
+      console.log(`[PARSE] ${o['Descricao']||'?'} | Raw:"${mesAnoRaw}" → Parseado:"${ultimaCobranca}" | Período:${periodo}m`);
+      if (ultimaCobranca) {
+        let temp = ultimaCobranca;
+        let ocorrencias = [];
+        for (let i = 0; i < 12; i++) {
+          ocorrencias.push(temp);
+          temp = addMeses(temp, periodo);
+        }
+        console.log(`        Ocorrências: ${ocorrencias.join(', ')}`);
+      }
+    }
+
     const planVal = calcPlanValue(o, mesProx);
-    if (planVal === 0) return;
+    if (planVal === 0) {
+      if (periodo && periodo > 1 && ultimaCobranca) {
+        const proxCobranca = addMeses(ultimaCobranca, periodo);
+        console.log(`✗ SKIP: ${o['Descricao']||'?'} | não cai em ${mesProx} (próxima:${proxCobranca})`);
+      }
+      return;
+    }
     const moeda = o['Moeda'] || 'EUR';
     const rawVal = parseFloat(o['Valor'] || 0);
     let valEUR = planVal;
@@ -357,9 +406,11 @@ function renderKPIs(trans) {
     else if (moeda === 'BRL') valEUR = valEUR / taxa_brl;
     if (rawVal < 0) valEUR = -valEUR;
     const tipo = rawVal > 0 ? 'Receita' : 'Despesa';
-    console.log(`${tipo}: ${o['Descricao']||'?'} | Valor:${rawVal} ${moeda} | valEUR:${valEUR.toFixed(2)}`);
+    const periodoStr = periodo && periodo > 1 ? ` (${periodo}m)` : '';
+    console.log(`✓ ${tipo}: ${o['Descricao']||'?'} | Valor:${rawVal} ${moeda} | valEUR:${valEUR.toFixed(2)}${periodoStr}`);
     saldoProx += valEUR;
   });
+  console.log(`\n--- FIM DEBUG ---\n`);
   const parcProxSAR = parcForMes(mesParc);
   const parcProxEUR = parcProxSAR / taxa_sar;
   console.log(`\n- Parcelas (${mesParc}): ${parcProxSAR} SAR = ${parcProxEUR.toFixed(2)} EUR`);
@@ -550,7 +601,9 @@ async function fetchLiveRates() {
 
 async function init() {
   try {
+    console.log('\n\n========== DASHBOARD INICIANDO (v2.0) ==========\n');
     [allTrans,allOrc,allParc,allPortfolio]=await Promise.all([gviz('Transacoes'),gviz('Orcamento'),gviz('Parcelamentos'),gviz('Portfolio').catch(()=>[])]);
+    console.log(`Carregado: ${allOrc.length} itens de Orçamento\n`);
     applyRemaps(allTrans);
     const resumoRows=await gviz('Resumo');
     resumo=resumoRows.length?resumoRows[resumoRows.length-1]:{};
