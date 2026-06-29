@@ -156,13 +156,10 @@ function gviz(sheet) {
 
 function parseMesAno(str) {
   if (!str) return null;
-  // Format: Date(y,m,d) from Google Sheets
   const dm = String(str).match(/Date\((\d+),(\d+),(\d+)\)/);
   if (dm) return `${MESES[parseInt(dm[2])]}/${String(dm[1]).slice(2)}`;
-  // Format: m/d/yyyy
   const us = String(str).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (us) return `${MESES[parseInt(us[1])-1]}/${String(us[3]).slice(2)}`;
-  // Format already Mmm-YY or Mmm/YY
   const already = String(str).match(/^([A-Za-z]{3})[-\/](\d{2})$/);
   if (already) return `${already[1]}/${already[2]}`;
   return str;
@@ -190,21 +187,16 @@ function mesAnoToNum(ma) {
 function calcPlanValue(o, currentMesAno) {
   const rawVal = parseFloat(o['Valor'] || 0);
   if (!rawVal) return 0;
-
   const freq = (o['Frequencia'] || 'Mensal').trim();
   const mesInicioRaw = o['Mes_Inicio'] || o['Inicio'] || '';
   const mesInicio = parseMesAno(mesInicioRaw) || currentMesAno;
-
   if (freq === 'Mensal') return Math.abs(rawVal);
-
   const periodo = freq === 'Bimestral' ? 2
     : freq === 'Trimestral' ? 3
     : freq === 'Quadrimestral' ? 4
     : freq === 'Semestral' ? 6
     : freq === 'Anual' ? 12 : 1;
-
   if (periodo <= 1) return Math.abs(rawVal);
-
   const diff = mesAnoToNum(currentMesAno) - mesAnoToNum(mesInicio);
   if (diff < 0) return 0;
   return diff % periodo === 0 ? Math.abs(rawVal) : 0;
@@ -228,19 +220,20 @@ function mkChart(id, cfg) {
   chartInst[id] = new Chart(canvas.getContext('2d'), cfg);
 }
 
+function getMesAno(t) { return parseMesAno(t['Data'] || t['Mes_Ano']); }
+
 function buildSel() {
   const sel = document.getElementById('selMes');
-  const meses = [...new Set(allTrans.map(t => parseMesAno(t['Mes_Ano'])).filter(Boolean))].sort((a,b)=>mesAnoToNum(a)-mesAnoToNum(b));
+  const meses = [...new Set(allTrans.map(getMesAno).filter(Boolean))].sort((a,b)=>mesAnoToNum(a)-mesAnoToNum(b));
   sel.innerHTML = meses.map(m=>`<option value="${m}">${m}</option>`).join('');
   if (meses.length) sel.value = meses[meses.length-1];
 }
 
 function filtered() {
   const sel = document.getElementById('selMes').value;
-  return allTrans.filter(t => parseMesAno(t['Mes_Ano']) === sel);
+  return allTrans.filter(t => getMesAno(t) === sel);
 }
 
-/* remap Categoria/Grupo */
 const REMAPS = [
   { match: t => (t['Descricao']||'').toLowerCase().includes('aluguel') && (t['Grupo']||'')==='Arabia Saudita', set: { Categoria:'Moradia', Grupo:'Arabia Saudita' } },
 ];
@@ -266,28 +259,23 @@ function parcForMes(mesAno) {
 function renderKPIs(trans) {
   const taxa_sar = (taxa_sar_live) || resumo['Taxa_EUR_SAR'] || 4.3008;
   const taxa_brl = (taxa_brl_live) || resumo['Taxa_EUR_BRL'] || 6.2;
-
   const currentMesAno = document.getElementById('selMes').value;
   const selMesSAR = currentMesAno;
 
-  // Total SAR (Arabia): transações do grupo Arabia Saudita com valor negativo
   const arabTrans = trans.filter(t => t['Grupo']==='Arabia Saudita');
   const totSAR = arabTrans.reduce((s,t) => {
     const val = parseFloat(t['Valor_SAR'] || t['Valor'] || 0);
     return val < 0 ? s + Math.abs(val) : s;
   }, 0);
 
-  // Total EUR (Espanha): transações do grupo Espanha com valor negativo (excluindo Salário)
   const eurTrans = trans.filter(t => t['Grupo']==='Espanha' && !(t['Categoria']||'').toLowerCase().includes('salário') && !(t['Categoria']||'').toLowerCase().includes('salario'));
   const totEUR = eurTrans.reduce((s,t) => {
     const val = v(t);
     return val < 0 ? s + Math.abs(val) : s;
   }, 0);
 
-  // Saldo atual EUR (com Salário)
   const saldoAtual = trans.filter(t => t['Grupo']==='Espanha').reduce((s,t) => s + v(t), 0);
 
-  // Previsto não debitado: itens do Orçamento Espanha ainda não lançados
   const mesProx = addN(currentMesAno, 2);
   const mesParc = addN(currentMesAno, 3);
 
@@ -302,7 +290,6 @@ function renderKPIs(trans) {
 
   const saldoPrev = saldoAtual - prevNaoDebit;
 
-  // Saldo Planejado
   let saldoProx = 0;
   allOrc.filter(o => o['Ativo']==='Sim').forEach(o => {
     const moeda = (o['Moeda'] || 'EUR').trim();
@@ -317,8 +304,7 @@ function renderKPIs(trans) {
     saldoProx += valEUR;
   });
   const parcProxSAR = parcForMes(mesParc);
-  const parcProxEUR = parcProxSAR / taxa_sar;
-  saldoProx -= parcProxEUR;
+  saldoProx -= parcProxSAR / taxa_sar;
 
   const proxLabel = mesProx || 'próximo';
   document.getElementById('kpiRow').innerHTML = `
@@ -332,16 +318,12 @@ function renderKPIs(trans) {
 function renderEspanha(trans) {
   const currentMesAno = document.getElementById('selMes').value;
   const planMap = {};
-
-  // Plan: apenas Grupo="Espanha" do Orcamento, agrupado por Descricao
   allOrc
     .filter(o => o['Grupo']==='Espanha' && o['Ativo']==='Sim')
     .forEach(o => {
       const cat = o['Descricao'] || 'Outros';
       planMap[cat] = (planMap[cat]||0) + calcPlanValue(o, currentMesAno);
     });
-
-  // Real: apenas Grupo="Espanha" das Transacoes, agrupado por Categoria
   const realRaw = {};
   trans
     .filter(t => t['Grupo']==='Espanha')
@@ -351,7 +333,6 @@ function renderEspanha(trans) {
     });
   const realMap = {};
   Object.entries(realRaw).forEach(([c, net]) => { if (net < 0) realMap[c] = Math.abs(net); });
-
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
     .filter(c => !c.toLowerCase().includes('receita'))
     .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
@@ -359,17 +340,14 @@ function renderEspanha(trans) {
 }
 
 function renderArabia(trans) {
+  const currentMesAno = document.getElementById('selMes').value;
   const planMap = {};
-
-  // Plan: apenas Grupo="Arabia Saudita" do Orcamento, agrupado por Descricao
   allOrc
     .filter(o => o['Grupo']==='Arabia Saudita' && o['Ativo']==='Sim')
     .forEach(o => {
       const cat = o['Descricao'] || 'Outros';
-      planMap[cat] = (planMap[cat]||0) + calcPlanValue(o, document.getElementById('selMes').value);
+      planMap[cat] = (planMap[cat]||0) + calcPlanValue(o, currentMesAno);
     });
-
-  // Real: apenas Grupo="Arabia Saudita" das Transacoes, agrupado por Categoria
   const realRaw = {};
   trans
     .filter(t => t['Grupo']==='Arabia Saudita')
@@ -495,7 +473,7 @@ async function fetchLiveRates() {
     taxa_sar_live = data.rates.SAR;
     taxa_brl_live = data.rates.BRL;
   } catch(e) {
-    console.warn('Não conseguiu buscar taxas ao vivo, usando fallback:', e.message);
+    console.warn('taxas ao vivo indisponíveis:', e.message);
     taxa_sar_live = null;
     taxa_brl_live = null;
   }
@@ -509,14 +487,6 @@ async function init() {
       gviz('Parcelamentos'),
       gviz('Portfolio').catch(()=>[])
     ]);
-    // visible debug panel
-    const dbg = document.createElement('div');
-    dbg.style.cssText='background:#fff3cd;border:1px solid #ffc107;padding:6px 14px;font-size:.7rem;display:flex;gap:16px;flex-wrap:wrap;';
-    dbg.innerHTML='<b>DEBUG:</b> Transações: '+allTrans.length+' | Orçamento: '+allOrc.length+' | Parcelamentos: '+allParc.length
-      +(allTrans.length>0 ? ' | Mes_Ano[0]: "'+allTrans[0]['Mes_Ano']+'" → "'+parseMesAno(allTrans[0]['Mes_Ano'])+'"' : ' | ⚠️ Transações VAZIO — planilha pode não ser pública ou aba se chama diferente')
-      +(allTrans.length>0 ? ' | Colunas: '+Object.keys(allTrans[0]).slice(0,8).join(', ') : '');
-    document.querySelector('.ctrl').after(dbg);
-
     applyRemaps(allTrans);
     const resumoRows=await gviz('Resumo');
     resumo=resumoRows.length?resumoRows[resumoRows.length-1]:{};
