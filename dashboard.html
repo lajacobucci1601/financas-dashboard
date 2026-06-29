@@ -27,7 +27,7 @@ header .sub { font-size:0.7rem; opacity:.55; }
 .ctrl select { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:5px; padding:4px 10px; font-size:.78rem; cursor:pointer; }
 .ctrl select option { background:var(--bar); }
 
-/* KPIs — 4 colunas */
+/* KPIs */
 .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; padding:12px 20px 8px; }
 .kpi { background:var(--card); border-radius:10px; padding:13px 16px; box-shadow:var(--shadow); border-top:3px solid var(--blue); }
 .kpi.red    { border-top-color:var(--red); }
@@ -39,8 +39,9 @@ header .sub { font-size:0.7rem; opacity:.55; }
 .kpi-val { font-size:1.25rem; font-weight:700; margin-bottom:2px; }
 .kpi-sub { font-size:.6rem; color:var(--muted); }
 
-/* MAIN GRID */
-.main { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:8px 20px 16px; }
+/* GRIDS */
+.main  { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:8px 20px 12px; }
+.main3 { display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px; padding:0 20px 16px; }
 .card { background:var(--card); border-radius:10px; padding:14px 16px; box-shadow:var(--shadow); }
 .card h2 { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
 .chart-wrap { height:220px; position:relative; }
@@ -66,11 +67,9 @@ td.neg { color:var(--red); }
 .invest-total .val { font-size:1.4rem; font-weight:700; }
 .invest-total .lbl { font-size:.65rem; color:var(--muted); }
 
-/* FULL WIDTH */
-.full { grid-column:1/-1; }
-
 @media(max-width:600px){
-  .main { grid-template-columns:1fr; }
+  .main  { grid-template-columns:1fr; }
+  .main3 { grid-template-columns:1fr; }
   .kpi-row { grid-template-columns:repeat(2,1fr); }
 }
 </style>
@@ -79,14 +78,14 @@ td.neg { color:var(--red); }
 
 <header>
   <div>
-    <h1>💰 Dashboard Financeiro</h1>
-    <div class="sub">Controle mensal · Saudi Arabia & Spain</div>
+    <h1>💰 Finanças Dashboard</h1>
+    <div class="sub">Controle financeiro pessoal</div>
   </div>
   <div id="lastUpdate">—</div>
 </header>
 
 <div class="ctrl">
-  <label>Mês:</label>
+  <label>MÊS/ANO</label>
   <select id="selMes" onchange="applyFilter()"></select>
 </div>
 
@@ -94,38 +93,32 @@ td.neg { color:var(--red); }
   <div class="kpi"><div class="kpi-lbl">Carregando…</div></div>
 </div>
 
+<!-- Row 1: Spain | Arabia charts -->
 <div class="main">
-
-  <!-- Arabia SAR Plan vs Real -->
+  <div class="card">
+    <h2><img src="https://flagcdn.com/16x12/es.png"> Espanha € — Plan vs Real (Todas as Categorias)</h2>
+    <div class="chart-wrap"><canvas id="cEsp"></canvas></div>
+  </div>
   <div class="card">
     <h2><img src="https://flagcdn.com/16x12/sa.png"> Arabia SAR — Plan vs Real</h2>
     <div class="chart-wrap"><canvas id="cArab"></canvas></div>
   </div>
+</div>
 
-  <!-- Arabia Real Breakdown -->
+<!-- Row 2: Parcelamentos | Investimentos | Arabia Real Breakdown -->
+<div class="main3">
   <div class="card">
-    <h2><img src="https://flagcdn.com/16x12/sa.png"> Arabia SAR — Real Breakdown</h2>
-    <div id="arabRealWrap"></div>
-  </div>
-
-  <!-- Spain EUR Plan vs Real -->
-  <div class="card">
-    <h2><img src="https://flagcdn.com/16x12/es.png"> Spain EUR — Plan vs Real</h2>
-    <div class="chart-wrap"><canvas id="cEsp"></canvas></div>
-  </div>
-
-  <!-- Investimentos -->
-  <div class="card">
-    <h2>📈 Investimentos & Poupança</h2>
-    <div id="investWrap"></div>
-  </div>
-
-  <!-- Parcelamentos full width -->
-  <div class="card full">
-    <h2>💳 Parcelamentos Ativos</h2>
+    <h2>💳 Parcelamentos — Próximos Meses (SAR)</h2>
     <div id="parcWrap"></div>
   </div>
-
+  <div class="card">
+    <h2>📈 Investimentos</h2>
+    <div id="investWrap"></div>
+  </div>
+  <div class="card">
+    <h2><img src="https://flagcdn.com/16x12/sa.png"> Arabia Real — Por Categoria (SAR)</h2>
+    <div id="arabRealWrap"></div>
+  </div>
 </div>
 
 <script>
@@ -336,7 +329,7 @@ function renderEspanha(trans) {
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
     .filter(c => !c.toLowerCase().includes('receita'))
     .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-  mkChart('cEsp',{type:'bar',data:{labels:cats,datasets:[{label:'Real (€)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (€)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{type:'logarithmic',min:1,grid:{color:'#eee'},ticks:{callback:n=>{const vv=Number(n);if(vv===0)return'';if([1,10,100,500,1000,2000,5000].includes(vv))return'€'+fmt(vv,0);return null;}}}}}});
+  mkChart('cEsp',{type:'bar',data:{labels:cats,datasets:[{label:'Real (€)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (€)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{beginAtZero:true,grid:{color:'#eee'},ticks:{callback:n=>'€'+fmt(n,0)}}}}}}); 
 }
 
 function renderArabia(trans) {
@@ -358,7 +351,7 @@ function renderArabia(trans) {
   const realMap = {};
   Object.entries(realRaw).forEach(([c,val]) => { if (val<0) realMap[c]=Math.abs(val); });
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])].filter(c => !c.toLowerCase().includes('receita')).sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-  mkChart('cArab',{type:'bar',options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{type:'logarithmic',min:1,grid:{color:'#eee'},ticks:{callback:n=>{const vv=Number(n);if(vv===0)return'';if([1,10,100,500,1000,5000,10000,20000].includes(vv))return fmt(vv,0);return null;}}}}},data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]}});
+  mkChart('cArab',{type:'bar',data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{beginAtZero:true,grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}}}}}); 
 }
 
 function renderParc() {
