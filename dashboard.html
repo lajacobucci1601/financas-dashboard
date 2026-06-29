@@ -147,7 +147,7 @@ function gviz(sheet) {
       const obj={};
       cols.forEach((c,i)=>{
         const cell=row.c[i];
-        obj[c]=cell?.(cell.v??cell.f??''):'';
+        obj[c]=cell ? (cell.v??cell.f??'') : '';
       });
       return obj;
     });
