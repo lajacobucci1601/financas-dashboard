@@ -355,10 +355,10 @@ function renderKPIs(trans) {
     let valEUR = planVal;
     if (moeda === 'SAR') valEUR = valEUR / taxa_sar;
     else if (moeda === 'BRL') valEUR = valEUR / taxa_brl;
-    const operacao = rawVal > 0 ? '+' : '-';
-    console.log(`${operacao} ${o['Descricao']||'?'} | Valor:${rawVal} ${moeda} | planVal:${planVal} | valEUR:${valEUR.toFixed(2)}`);
-    if (rawVal > 0) saldoProx += valEUR;
-    else saldoProx -= valEUR;
+    if (rawVal < 0) valEUR = -valEUR;
+    const tipo = rawVal > 0 ? 'Receita' : 'Despesa';
+    console.log(`${tipo}: ${o['Descricao']||'?'} | Valor:${rawVal} ${moeda} | valEUR:${valEUR.toFixed(2)}`);
+    saldoProx += valEUR;
   });
   const parcProxSAR = parcForMes(mesParc);
   const parcProxEUR = parcProxSAR / taxa_sar;
