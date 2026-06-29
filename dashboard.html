@@ -96,11 +96,11 @@ td.neg { color:var(--red); }
 <!-- Row 1: Spain | Arabia charts -->
 <div class="main">
   <div class="card">
-    <h2><img src="https://flagcdn.com/16x12/es.png"> Espanha € — Plan vs Real (Todas as Categorias)</h2>
+    <h2><img src="https://flagcdn.com/16x12/es.png"> Espanha &euro; &mdash; Plan vs Real (Todas as Categorias)</h2>
     <div class="chart-wrap"><canvas id="cEsp"></canvas></div>
   </div>
   <div class="card">
-    <h2><img src="https://flagcdn.com/16x12/sa.png"> Arabia SAR — Plan vs Real</h2>
+    <h2><img src="https://flagcdn.com/16x12/sa.png"> Arabia SAR &mdash; Plan vs Real</h2>
     <div class="chart-wrap"><canvas id="cArab"></canvas></div>
   </div>
 </div>
@@ -108,15 +108,15 @@ td.neg { color:var(--red); }
 <!-- Row 2: Parcelamentos | Investimentos | Arabia Real Breakdown -->
 <div class="main3">
   <div class="card">
-    <h2>💳 Parcelamentos — Próximos Meses (SAR)</h2>
+    <h2>&#x1F4B3; Parcelamentos &mdash; Pr&oacute;ximos Meses (SAR)</h2>
     <div id="parcWrap"></div>
   </div>
   <div class="card">
-    <h2>📈 Investimentos</h2>
+    <h2>&#x1F4C8; Investimentos</h2>
     <div id="investWrap"></div>
   </div>
   <div class="card">
-    <h2><img src="https://flagcdn.com/16x12/sa.png"> Arabia Real — Por Categoria (SAR)</h2>
+    <h2><img src="https://flagcdn.com/16x12/sa.png"> Arabia Real &mdash; Por Categoria (SAR)</h2>
     <div id="arabRealWrap"></div>
   </div>
 </div>
@@ -302,10 +302,10 @@ function renderKPIs(trans) {
   const proxLabel = mesProx || 'próximo';
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi red"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">SAB_Card do mês + Aluguel (KSA) + Parcelas ${addN(selMesSAR,1)||''}</div></div>
-    <div class="kpi orange"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/es.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — saldo do mês (sem Salário)</div></div>
-    <div class="kpi green"><div class="kpi-lbl">💶 Balance Spain<br>(real até agora)</div><div class="kpi-val">€ ${fmt(saldoAtual,2)}</div><div class="kpi-sub">BBVA — saldo do mês (com Salário)</div></div>
-    <div class="kpi blue"><div class="kpi-lbl">🔮 Balance Spain<br>(real + previsto mês)</div><div class="kpi-val">€ ${fmt(saldoPrev,2)}</div><div class="kpi-sub">Saldo real − Previsto não debitado (€ ${fmt(prevNaoDebit,2)})</div></div>
-    <div class="kpi purple"><div class="kpi-lbl">📅 Saldo Planejado<br>${proxLabel}</div><div class="kpi-val">€ ${fmt(saldoProx,2)}</div><div class="kpi-sub">Orçamento (todas as moedas) − Parcelas (${mesParc||''})</div></div>`;
+    <div class="kpi orange"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/es.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">&euro; ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA &mdash; saldo do mês (sem Salário)</div></div>
+    <div class="kpi green"><div class="kpi-lbl">&#x1F4B6; Balance Spain<br>(real até agora)</div><div class="kpi-val">&euro; ${fmt(saldoAtual,2)}</div><div class="kpi-sub">BBVA &mdash; saldo do mês (com Salário)</div></div>
+    <div class="kpi blue"><div class="kpi-lbl">&#x1F52E; Balance Spain<br>(real + previsto mês)</div><div class="kpi-val">&euro; ${fmt(saldoPrev,2)}</div><div class="kpi-sub">Saldo real &minus; Previsto não debitado (&euro; ${fmt(prevNaoDebit,2)})</div></div>
+    <div class="kpi purple"><div class="kpi-lbl">&#x1F4C5; Saldo Planejado<br>${proxLabel}</div><div class="kpi-val">&euro; ${fmt(saldoProx,2)}</div><div class="kpi-sub">Orçamento (todas as moedas) &minus; Parcelas (${mesParc||''})</div></div>`;
 }
 
 function renderEspanha(trans) {
@@ -329,7 +329,25 @@ function renderEspanha(trans) {
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
     .filter(c => !c.toLowerCase().includes('receita'))
     .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-  mkChart('cEsp',{type:'bar',data:{labels:cats,datasets:[{label:'Real (€)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (€)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{beginAtZero:true,grid:{color:'#eee'},ticks:{callback:n=>'€'+fmt(n,0)}}}}}}); 
+  mkChart('cEsp', {
+    type: 'bar',
+    data: {
+      labels: cats,
+      datasets: [
+        {label:'Real (€)', data:cats.map(c=>realMap[c]||0), backgroundColor:'rgba(231,76,60,0.8)', borderRadius:3},
+        {label:'Plan (€)', data:cats.map(c=>planMap[c]||0), backgroundColor:'rgba(39,174,96,0.7)', borderRadius:3}
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {legend:{position:'top',labels:{font:{size:10}}}},
+      scales: {
+        x: {grid:{display:false}, ticks:{font:{size:8},maxRotation:45}},
+        y: {beginAtZero:true, grid:{color:'#eee'}, ticks:{callback: n => '€'+fmt(n,0)}}
+      }
+    }
+  });
 }
 
 function renderArabia(trans) {
@@ -350,8 +368,28 @@ function renderArabia(trans) {
     });
   const realMap = {};
   Object.entries(realRaw).forEach(([c,val]) => { if (val<0) realMap[c]=Math.abs(val); });
-  const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])].filter(c => !c.toLowerCase().includes('receita')).sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-  mkChart('cArab',{type:'bar',data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{beginAtZero:true,grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}}}}}); 
+  const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
+    .filter(c => !c.toLowerCase().includes('receita'))
+    .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
+  mkChart('cArab', {
+    type: 'bar',
+    data: {
+      labels: cats,
+      datasets: [
+        {label:'Real (SAR)', data:cats.map(c=>realMap[c]||0), backgroundColor:'rgba(231,76,60,0.8)', borderRadius:3},
+        {label:'Plan (SAR)', data:cats.map(c=>planMap[c]||0), backgroundColor:'rgba(39,174,96,0.7)', borderRadius:3}
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {legend:{position:'top',labels:{font:{size:10}}}},
+      scales: {
+        x: {grid:{display:false}, ticks:{font:{size:8},maxRotation:45}},
+        y: {beginAtZero:true, grid:{color:'#eee'}, ticks:{callback: n => fmt(n,0)}}
+      }
+    }
+  });
 }
 
 function renderParc() {
@@ -372,8 +410,8 @@ function renderParc() {
   const tots = new Array(6).fill(0);
   const rows = active.map(p => {
     const sar=Math.abs(parseFloat(p['Valor_SAR']||0)),cur=parseInt(p['Parcela_Atual']||1),tot=parseInt(p['Total_Parcelas']||1),left=tot-cur+1,offset=startOffset(p);
-    const cells=cols.map((_,i)=>{if(i>=offset&&i<offset+left){tots[i]+=sar;return `<td class="r neg">${fmt(sar,0)}</td>`;}return `<td class="r" style="color:var(--muted)">—</td>`;});
-    const desc=p['Descricao']||'—';
+    const cells=cols.map((_,i)=>{if(i>=offset&&i<offset+left){tots[i]+=sar;return `<td class="r neg">${fmt(sar,0)}</td>`;}return `<td class="r" style="color:var(--muted)">&#8212;</td>`;});
+    const desc=p['Descricao']||'&#8212;';
     return `<tr><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc}</td><td class="r">${cur}/${tot}</td><td class="r">${fmt(sar*tot,0)}</td>${cells.join('')}</tr>`;
   }).join('');
   document.getElementById('parcWrap').innerHTML=`<table><thead><tr><th>Item</th><th class="r">Parc.</th><th class="r">Total</th>${cols.map(c=>`<th class="r">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3">Total SAR/mês</td>${tots.map(t=>`<td class="r">${fmt(t,0)}</td>`).join('')}</tr></tfoot></table>`;
@@ -385,14 +423,14 @@ function renderInvest() {
   const ativos = allPortfolio.filter(p => p['Ativo'] && parseFloat(p['Valor_EUR']||0)>0).sort((a,b)=>parseFloat(b['Valor_EUR']||0)-parseFloat(a['Valor_EUR']||0));
   const totalPort = ativos.reduce((s,p)=>s+parseFloat(p['Valor_EUR']||0),0);
   const total = totalPort || resumo['Saldo_Poupanca_EUR']||0;
-  const falta=resumo['Falta_Meta_EUR']||0,pct=Math.min((total/200000)*100,100),meses=resumo['Meses_Para_Meta']||0,previsao=resumo['Previsao_Meta']||'—',ritmo=resumo['Ritmo_Jan2028_EUR']||0;
+  const falta=resumo['Falta_Meta_EUR']||0,pct=Math.min((total/200000)*100,100),meses=resumo['Meses_Para_Meta']||0,previsao=resumo['Previsao_Meta']||'&#8212;',ritmo=resumo['Ritmo_Jan2028_EUR']||0;
 
   const donutHtml = ativos.length ? `
     <div style="display:flex;align-items:center;gap:10px;margin:10px 0">
       <div style="position:relative;width:110px;height:110px;flex-shrink:0">
         <canvas id="cPortfolio" width="110" height="110"></canvas>
         <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-          <div style="font-size:.7rem;font-weight:700;color:var(--text)">€ ${fmt(totalPort,0)}</div>
+          <div style="font-size:.7rem;font-weight:700;color:var(--text)">&euro; ${fmt(totalPort,0)}</div>
           <div style="font-size:.55rem;color:var(--muted)">Positions</div>
         </div>
       </div>
@@ -411,12 +449,12 @@ function renderInvest() {
     </div>` : '';
 
   document.getElementById('investWrap').innerHTML=`
-  <div class="invest-total"><div class="val">€ ${fmt(total,0)}</div><div class="lbl">Poupança atual</div></div>
+  <div class="invest-total"><div class="val">&euro; ${fmt(total,0)}</div><div class="lbl">Poupança atual</div></div>
   <div style="background:#ede8e0;border-radius:8px;height:10px;margin:6px 0"><div style="background:var(--green);border-radius:8px;height:10px;width:${pct}%"></div></div>
   <div style="font-size:.67rem;color:var(--muted);line-height:1.6">
-    <div>📌 Falta: <b>€ ${fmt(falta,0)}</b> para meta €200k</div>
-    <div>📅 Previsão: <b>${previsao}</b> (${fmt(meses,1)} meses)</div>
-    <div>⚡ Ritmo p/ Jan/2028: <b>€ ${fmt(ritmo,0)}/mês</b></div>
+    <div>&#x1F4CC; Falta: <b>&euro; ${fmt(falta,0)}</b> para meta &euro;200k</div>
+    <div>&#x1F4C5; Previsão: <b>${previsao}</b> (${fmt(meses,1)} meses)</div>
+    <div>&#x26A1; Ritmo p/ Jan/2028: <b>&euro; ${fmt(ritmo,0)}/mês</b></div>
   </div>
   ${donutHtml}`;
 
@@ -431,7 +469,7 @@ function renderInvest() {
       options:{
         responsive:false,
         cutout:'70%',
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const vv=ctx.parsed;const pc=(vv/totalPort*100).toFixed(1);return ` ${ctx.label}: € ${fmt(vv,0)} (${pc}%)`;}}}},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const vv=ctx.parsed;const pc=(vv/totalPort*100).toFixed(1);return ` ${ctx.label}: €${fmt(vv,0)} (${pc}%)`;}}}},
         animation:{duration:600}
       }
     });
@@ -466,7 +504,7 @@ async function fetchLiveRates() {
     taxa_sar_live = data.rates.SAR;
     taxa_brl_live = data.rates.BRL;
   } catch(e) {
-    console.warn('taxas ao vivo indisponíveis:', e.message);
+    console.warn('taxas ao vivo indisponiveis:', e.message);
     taxa_sar_live = null;
     taxa_brl_live = null;
   }
@@ -492,7 +530,7 @@ async function init() {
     renderInvest();
   } catch(e) {
     console.error(e);
-    document.getElementById('kpiRow').innerHTML=`<div style="color:var(--red);padding:20px;grid-column:1/-1">❌ Erro ao carregar. Verifique se a planilha está pública.<br><small>${e.message}</small></div>`;
+    document.getElementById('kpiRow').innerHTML=`<div style="color:var(--red);padding:20px;grid-column:1/-1">Erro ao carregar. Verifique se a planilha esta publica.<br><small>${e.message}</small></div>`;
   }
 }
 
