@@ -347,7 +347,7 @@ function renderKPIs(trans) {
   let saldoProx = 0;
   console.log(`\n=== SALDO PLANEJADO DEBUG (${mesProx}) ===`);
   console.log(`Taxa SAR: ${taxa_sar}, Taxa BRL: ${taxa_brl}`);
-  allOrc.filter(o => o['Ativo']==='Sim' && o['Grupo']==='Espanha').forEach(o => {
+  allOrc.filter(o => o['Ativo']==='Sim').forEach(o => {
     const planVal = calcPlanValue(o, mesProx);
     if (planVal === 0) return;
     const moeda = o['Moeda'] || 'EUR';
@@ -427,7 +427,7 @@ function renderArabia(trans) {
   const realMap = {};
   Object.entries(realRaw).forEach(([c,val]) => { if (val<0) realMap[c]=Math.abs(val); });
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])].filter(c => !c.toLowerCase().includes('receita')).sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-  mkChart('cArab',{type:'bar',options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}}},data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]}});
+  mkChart('cArab',{type:'bar',options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}}}},data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]}});
 }
 
 function renderParc() {
