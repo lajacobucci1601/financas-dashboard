@@ -230,16 +230,9 @@ function mkChart(id, cfg) {
 
 function buildSel() {
   const sel = document.getElementById('selMes');
-  console.log('allTrans count:', allTrans.length);
-  if (allTrans.length > 0) {
-    const sample = allTrans[0];
-    console.log('Mes_Ano sample raw:', sample['Mes_Ano'], '→ parsed:', parseMesAno(sample['Mes_Ano']));
-  }
   const meses = [...new Set(allTrans.map(t => parseMesAno(t['Mes_Ano'])).filter(Boolean))].sort((a,b)=>mesAnoToNum(a)-mesAnoToNum(b));
-  console.log('Meses disponíveis:', meses);
   sel.innerHTML = meses.map(m=>`<option value="${m}">${m}</option>`).join('');
   if (meses.length) sel.value = meses[meses.length-1];
-  console.log('Mês selecionado:', sel.value);
 }
 
 function filtered() {
@@ -309,12 +302,10 @@ function renderKPIs(trans) {
 
   const saldoPrev = saldoAtual - prevNaoDebit;
 
-  // Saldo Planejado: orçamento total (todas moedas convertidas p/ EUR) para mês seguinte
-  console.log(`\n========== DEBUG SALDO PLANEJADO (${mesProx}) ==========`);
+  // Saldo Planejado
   let saldoProx = 0;
   allOrc.filter(o => o['Ativo']==='Sim').forEach(o => {
     const moeda = (o['Moeda'] || 'EUR').trim();
-    const periodo = parseInt(o['Periodo'] || o['Frequencia_Num'] || 1) || 1;
     const rawVal = parseFloat(o['Valor'] || 0);
     if (!rawVal) return;
     let planVal = calcPlanValue(o, mesProx);
@@ -323,17 +314,11 @@ function renderKPIs(trans) {
     if (moeda === 'SAR') valEUR = valEUR / taxa_sar;
     else if (moeda === 'BRL') valEUR = valEUR / taxa_brl;
     if (rawVal < 0) valEUR = -valEUR;
-    const tipo = rawVal > 0 ? 'Receita' : 'Despesa';
-    const periodoStr = periodo && periodo > 1 ? ` (${periodo}m)` : '';
-    console.log(`✓ ${tipo}: ${o['Descricao']||'?'} | Valor:${rawVal} ${moeda} | valEUR:${valEUR.toFixed(2)}${periodoStr}`);
     saldoProx += valEUR;
   });
-  console.log(`\n--- FIM DEBUG ---\n`);
   const parcProxSAR = parcForMes(mesParc);
   const parcProxEUR = parcProxSAR / taxa_sar;
-  console.log(`\n- Parcelas (${mesParc}): ${parcProxSAR} SAR = ${parcProxEUR.toFixed(2)} EUR`);
   saldoProx -= parcProxEUR;
-  console.log(`\n= TOTAL SALDO PLANEJADO: ${saldoProx.toFixed(2)} EUR\n`);
 
   const proxLabel = mesProx || 'próximo';
   document.getElementById('kpiRow').innerHTML = `
@@ -518,9 +503,20 @@ async function fetchLiveRates() {
 
 async function init() {
   try {
-    console.log('\n\n========== DASHBOARD INICIANDO (v2.0) ==========\n');
-    [allTrans,allOrc,allParc,allPortfolio]=await Promise.all([gviz('Transacoes'),gviz('Orcamento'),gviz('Parcelamentos'),gviz('Portfolio').catch(()=>[])]);
-    console.log(`Carregado: ${allTrans.length} transações, ${allOrc.length} orçamento\n`);
+    [allTrans,allOrc,allParc,allPortfolio]=await Promise.all([
+      gviz('Transacoes').catch(()=>gviz('Transações').catch(()=>[])),
+      gviz('Orcamento'),
+      gviz('Parcelamentos'),
+      gviz('Portfolio').catch(()=>[])
+    ]);
+    // visible debug panel
+    const dbg = document.createElement('div');
+    dbg.style.cssText='background:#fff3cd;border:1px solid #ffc107;padding:6px 14px;font-size:.7rem;display:flex;gap:16px;flex-wrap:wrap;';
+    dbg.innerHTML='<b>DEBUG:</b> Transações: '+allTrans.length+' | Orçamento: '+allOrc.length+' | Parcelamentos: '+allParc.length
+      +(allTrans.length>0 ? ' | Mes_Ano[0]: "'+allTrans[0]['Mes_Ano']+'" → "'+parseMesAno(allTrans[0]['Mes_Ano'])+'"' : ' | ⚠️ Transações VAZIO — planilha pode não ser pública ou aba se chama diferente')
+      +(allTrans.length>0 ? ' | Colunas: '+Object.keys(allTrans[0]).slice(0,8).join(', ') : '');
+    document.querySelector('.ctrl').after(dbg);
+
     applyRemaps(allTrans);
     const resumoRows=await gviz('Resumo');
     resumo=resumoRows.length?resumoRows[resumoRows.length-1]:{};
