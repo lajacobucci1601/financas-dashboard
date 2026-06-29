@@ -428,23 +428,17 @@ function renderKPIs(trans) {
 
 function renderEspanha(trans) {
   const currentMesAno = document.getElementById('selMes').value;
-  const taxa_sar = resumo['Taxa_EUR_SAR'] || 4.3008;
-  const taxa_brl = resumo['Taxa_EUR_BRL'] || 6.2;
   const planMap = {};
 
+  // Plan: apenas Grupo="Espanha" do Orcamento, agrupado por Descricao
   allOrc
-    .filter(o => ['Espanha','GordaEspanha','GordaBrasil'].includes(o['Grupo']) && o['Moeda']==='EUR')
+    .filter(o => o['Grupo']==='Espanha' && o['Ativo']==='Sim')
     .forEach(o => {
       const cat = o['Descricao'] || 'Outros';
       planMap[cat] = (planMap[cat]||0) + calcPlanValue(o, currentMesAno);
     });
 
-  allOrc.filter(o => o['Moeda']==='BRL' && o['Ativo']==='Sim').forEach(o => {
-    const cat = o['Descricao'] || 'Outros';
-    const val = Math.abs(parseFloat(o['Valor']||0)) / taxa_brl;
-    planMap[cat] = (planMap[cat]||0) + val;
-  });
-
+  // Real: apenas Grupo="Espanha" das Transacoes, agrupado por Categoria
   const realRaw = {};
   trans
     .filter(t => t['Grupo']==='Espanha')
