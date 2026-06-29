@@ -36,43 +36,46 @@ header .sub { font-size:0.7rem; opacity:.55; }
 .kpi.blue   { border-top-color:var(--blue); }
 .kpi.purple { border-top-color:var(--purple); }
 .kpi-lbl { font-size:.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; line-height:1.3; }
-.kpi-val { font-size:1.25rem; font-weight:700; margin-bottom:2px; }
-.kpi-sub { font-size:.6rem; color:var(--muted); }
+.kpi-val { font-size:1.3rem; font-weight:700; }
+.kpi-sub { font-size:.64rem; color:var(--muted); margin-top:3px; line-height:1.4; }
 
-/* GRIDS */
+/* ROWS */
 .row1 { display:grid; grid-template-columns:3fr 2fr; gap:10px; padding:0 20px 8px; }
 .row2 { display:grid; grid-template-columns:5fr 3fr 4fr; gap:10px; padding:0 20px 18px; }
-.card { background:var(--card); border-radius:10px; padding:14px 16px; box-shadow:var(--shadow); }
-.card h2 { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
-.chart-wrap { height:220px; position:relative; }
+.card { background:var(--card); border-radius:10px; padding:14px; box-shadow:var(--shadow); }
+.card-title { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; margin-bottom:10px; padding-bottom:7px; border-bottom:1px solid var(--border); }
 
-/* HORIZONTAL BARS */
-.hb { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
-.hb-lbl { font-size:.62rem; color:var(--text); width:105px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.hb-track { flex:1; background:#f0ece3; border-radius:3px; height:14px; position:relative; }
-.hb-fill { background:var(--red); border-radius:3px; height:14px; display:flex; align-items:center; justify-content:flex-end; padding-right:4px; min-width:28px; }
-.hb-val { font-size:.58rem; font-weight:700; color:#fff; white-space:nowrap; }
+/* TABLE */
+table { width:100%; border-collapse:collapse; font-size:.73rem; }
+thead th { background:var(--header); color:#fff; padding:6px 8px; text-align:left; font-size:.68rem; white-space:nowrap; }
+thead th.r { text-align:right; }
+tbody tr:nth-child(even) { background:#faf7f3; }
+tbody tr:hover { background:#f5efe6; }
+tbody td { padding:5px 8px; border-bottom:1px solid #f0ebe4; }
+tbody td.r { text-align:right; }
+tfoot td { padding:7px 8px; font-weight:700; border-top:2px solid var(--border); font-size:.73rem; }
+tfoot td.r { text-align:right; color:var(--red); }
+.neg { color:var(--red); }
 
-/* PARCELAMENTOS */
-#parcWrap table { width:100%; border-collapse:collapse; font-size:.65rem; }
-#parcWrap th { background:#f7f3ee; padding:4px 6px; text-align:left; font-weight:600; color:var(--muted); font-size:.6rem; border-bottom:1px solid var(--border); }
-#parcWrap td { padding:3px 6px; border-bottom:1px solid #f5f0eb; }
-#parcWrap tfoot td { font-weight:700; background:#f7f3ee; border-top:2px solid var(--border); }
-td.r { text-align:right; }
-td.neg { color:var(--red); }
+/* HORIZONTAL BAR */
+.hb { display:flex; align-items:center; gap:7px; margin-bottom:6px; }
+.hb-lbl { font-size:.68rem; width:95px; text-align:right; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); }
+.hb-track { flex:1; background:#ede8e0; border-radius:3px; height:14px; }
+.hb-fill { height:100%; border-radius:3px; background:var(--green); display:flex; align-items:center; min-width:2px; }
+.hb-val { font-size:.6rem; color:#fff; font-weight:700; padding-left:4px; white-space:nowrap; }
 
-/* LOADING SPINNER */
-.loading { display:flex; align-items:center; justify-content:center; padding:40px; color:var(--muted); font-size:.75rem; gap:8px; }
-.spin { width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin .7s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
+/* PIE / INVEST */
+.invest-total { text-align:center; margin-bottom:8px; }
+.invest-total .val { font-size:1.4rem; font-weight:700; color:var(--green); }
+.invest-total .lbl { font-size:.68rem; color:var(--muted); }
+.invest-legend { font-size:.65rem; color:var(--muted); text-align:center; margin-top:6px; }
 
-/* INVESTIMENTOS */
-#investWrap { font-size:.72rem; }
-.invest-total { display:flex; align-items:baseline; gap:8px; margin-bottom:4px; }
-.invest-total .val { font-size:1.4rem; font-weight:700; }
-.invest-total .lbl { font-size:.65rem; color:var(--muted); }
+/* LOADING */
+.loading { text-align:center; padding:24px; color:var(--muted); font-size:.8rem; }
+.spin { width:24px; height:24px; border:3px solid var(--border); border-top-color:var(--green); border-radius:50%; animation:sp .8s linear infinite; margin:0 auto 7px; }
+@keyframes sp { to { transform:rotate(360deg); } }
 
-@media(max-width:600px){
+@media(max-width:900px) {
   .kpi-row { grid-template-columns:repeat(3,1fr); }
   .row1,.row2 { grid-template-columns:1fr; }
 }
@@ -82,96 +85,175 @@ td.neg { color:var(--red); }
 
 <header>
   <div>
-    <h1>&#x1F4B0; Fina&#x00E7;as Dashboard</h1>
+    <h1>💰 Finanças Dashboard</h1>
     <div class="sub">Controle financeiro pessoal</div>
   </div>
-  <div id="lastUpdate">&#x2014;</div>
+  <div id="lastUpdate"></div>
 </header>
 
 <div class="ctrl">
-  <label>M&#x00CA;S/ANO</label>
-  <select id="selMes" onchange="applyFilter()"></select>
+  <label>MÊS/ANO</label>
+  <select id="selMes" onchange="applyFilter()"><option value="">Todos</option></select>
 </div>
 
+<!-- KPIs -->
 <div class="kpi-row" id="kpiRow">
-  <div class="kpi"><div class="kpi-lbl">Carregando&#x2026;</div></div>
+  <div class="loading" style="grid-column:1/-1"><div class="spin"></div>Carregando...</div>
 </div>
 
+<!-- Charts -->
 <div class="row1">
   <div class="card">
-    <h2><img src="https://flagcdn.com/16x12/es.png"> Espanha &#x20AC; &#x2014; Plan vs Real (Todas as Categorias)</h2>
-    <div class="chart-wrap"><canvas id="cEsp"></canvas></div>
+    <div class="card-title">📊 Espanha € — Plan vs Real (todas as categorias)</div>
+    <div style="position:relative;height:280px"><canvas id="cEsp"></canvas></div>
   </div>
   <div class="card">
-    <h2><img src="https://flagcdn.com/16x12/sa.png"> Arabia SAR &#x2014; Plan vs Real</h2>
-    <div class="chart-wrap"><canvas id="cArab"></canvas></div>
+    <div class="card-title"><img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:3px"> Arabia SAR — Plan vs Real</div>
+    <div style="position:relative;height:280px"><canvas id="cArab"></canvas></div>
   </div>
 </div>
 
+<!-- Bottom -->
 <div class="row2">
   <div class="card">
-    <h2>&#x1F4B3; Parcelamentos &#x2014; Pr&#x00F3;ximos Meses (SAR)</h2>
+    <div class="card-title">💳 Parcelamentos — Próximos Meses (SAR)</div>
     <div id="parcWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
   <div class="card">
-    <h2>&#x1F4C8; Investimentos</h2>
+    <div class="card-title">📈 Investimentos</div>
     <div id="investWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
   <div class="card">
-    <h2><img src="https://flagcdn.com/16x12/sa.png"> Arabia Real &#x2014; Por Categoria (SAR)</h2>
+    <div class="card-title"><img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:3px"> Arabia Real — Por Categoria (SAR)</div>
     <div id="arabRealWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
 </div>
 
 <script>
 const SHEET_ID = '1xEagjesBVqfq9YjjmbS56X6YzeU_ajDHxZyP7D_y9X4';
-const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const _ch     = {};
 
-let allTrans=[], allOrc=[], allParc=[], allPortfolio=[], resumo={};
-let taxa_sar_live=null, taxa_brl_live=null;
-let chartInst={};
+const REMAPS = [
+  { test: t => (t['Descricao']||'').toLowerCase().includes('amortizacion de prestamo'), cat: 'Lavanderia' },
+  { test: t => Math.abs(parseFloat(t['Valor']||0)) === 70 && t['Grupo'] === 'Espanha',  cat: 'Garagem'   },
+];
+function applyRemaps(rows) {
+  rows.forEach(t => { REMAPS.forEach(r => { if (r.test(t)) t['Categoria'] = r.cat; }); });
+}
 
-function fmt(n,d=0){return Number(n).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});}
-
-function gviz(sheet) {
+async function gviz(sheet) {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheet)}`;
-  return fetch(url).then(r=>r.text()).then(txt=>{
-    const json = JSON.parse(txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-    const cols = json.table.cols.map(c=>c.label);
-    return (json.table.rows||[]).map(row=>{
-      const obj={};
-      cols.forEach((c,i)=>{
-        const cell=row.c?.[i];
-        obj[c]=cell ? (cell.v??cell.f??'') : '';
-      });
-      return obj;
-    });
+  const txt = await (await fetch(url)).text();
+  const tbl = JSON.parse(txt.match(/setResponse\(([\s\S]*)\)/)[1]).table;
+  const hdrs = tbl.cols.map(c => c.label || c.id);
+  return tbl.rows.map(r => {
+    const o = {};
+    r.c.forEach((c,i) => { o[hdrs[i]] = c ? c.v : null; });
+    return o;
   });
 }
 
-function parseDate(str) {
-  if (!str) return null;
-  const dm = String(str).match(/Date\((\d+),(\d+),(\d+)\)/);
-  if (dm) return new Date(parseInt(dm[1]), parseInt(dm[2]), parseInt(dm[3]));
-  const us = String(str).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (us) return new Date(parseInt(us[3]), parseInt(us[1])-1, parseInt(us[2]));
+function parseDate(v) {
+  if (!v) return null;
+  const m = String(v).match(/Date\((\d+),(\d+),(\d+)\)/);
+  if (m) return new Date(+m[1],+m[2],+m[3]);
+  const m2 = typeof v==='string' && v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m2) return new Date(+m2[3],+m2[2]-1,+m2[1]);
   return null;
 }
 
-function parseMesAno(str) {
-  if (!str) return null;
-  const dm = String(str).match(/Date\((\d+),(\d+),(\d+)\)/);
-  if (dm) return `${MESES[parseInt(dm[2])]}/${String(dm[1]).slice(2)}`;
-  const us = String(str).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (us) return `${MESES[parseInt(us[1])-1]}/${String(us[3]).slice(2)}`;
-  const already = String(str).match(/^([A-Za-z]{3})[-\/](\d{2})$/);
-  if (already) return `${already[1]}/${already[2]}`;
-  return null;
+function fmtDate(v) {
+  const d = parseDate(v);
+  return d ? d.toLocaleDateString('pt-BR') : (v ? String(v) : '—');
+}
+
+function fmt(n, dec=2) {
+  if (n==null || isNaN(+n)) return '—';
+  return (+n).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+
+function v(t) { return parseFloat(t['Valor']||0); }
+
+function mkChart(id, cfg) {
+  if (_ch[id]) { _ch[id].destroy(); delete _ch[id]; }
+  const el = document.getElementById(id);
+  if (el) _ch[id] = new Chart(el, cfg);
+}
+
+let allTrans=[], allOrc=[], allParc=[], allPortfolio=[], resumo={};
+let taxa_sar_live=null, taxa_brl_live=null;
+
+function parseMesAno(val) {
+  if (!val) return null;
+  const s = String(val);
+  const m = s.match(/Date\((\d+),(\d+),\d+\)/);
+  if (m) return `${MESES[+m[2]]}/${String(+m[1]).slice(2)}`;
+  // Handle Google Sheets m/d/yyyy format (e.g., "4/1/2026" = April 1, 2026)
+  const m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m2) {
+    const month = parseInt(m2[1]) - 1; // Convert to 0-based index for MESES
+    const year = m2[3];
+    return `${MESES[month]}/${String(year).slice(2)}`;
+  }
+  // Handle format like "Fev-26", "Abr-26", "Jun-26"
+  const m3 = s.match(/^([A-Z][a-z]{2})-(\d{2})$/);
+  if (m3) {
+    const mesNome = m3[1];
+    const year = m3[2];
+    const mesIdx = MESES.indexOf(mesNome);
+    if (mesIdx >= 0) return `${mesNome}/${year}`;
+  }
+  return s.trim();
+}
+
+// Avança N meses a partir de "Mmm/YY" ou "Mmm/YYYY" e retorna "Mmm/YY"
+function addMeses(mesAno, n) {
+  const [m, y] = mesAno.split('/');
+  const fullYear = parseInt(y) < 100 ? 2000 + parseInt(y) : parseInt(y);
+  const total = fullYear * 12 + MESES.indexOf(m) + n;
+  return `${MESES[total % 12]}/${String(Math.floor(total / 12)).slice(2)}`;
+}
+
+// Mapeia texto de periodicidade para número de meses
+function parsePeriodo(o) {
+  const periStr = String(o['Periodicidade'] || o['periodicidade'] || o['Obs'] || o['obs'] || '').toLowerCase();
+  if (/trianual/.test(periStr)) return 36;
+  if (/semestral/.test(periStr)) return 6;
+  if (/trimestral/.test(periStr)) return 3;
+  if (/anual/.test(periStr)) return 12;
+  if (/bimestral/.test(periStr)) return 2;
+  const pm = periStr.match(/(\d+)/);
+  return pm ? parseInt(pm[1]) : null;
+}
+
+// Retorna o valor de plano ajustado para despesas periódicas.
+// Lê Periodicidade ("Semestral"/"Trimestral"/número) e Mes/Ano (data de início).
+// Retorna o valor se o mês atual cai em uma ocorrência periódica.
+function calcPlanValue(o, currentMesAno) {
+  const val = Math.abs(parseFloat(o['Valor'] || 0));
+  const dataInicio = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
+  if (!dataInicio) return val; // sem data de início → mensal normal
+
+  const periodo = parsePeriodo(o);
+  if (!periodo || periodo <= 1) return val; // mensal normal
+
+  // Verificar se currentMesAno cai em uma ocorrência periódica começando de dataInicio
+  let proxOcorrencia = dataInicio;
+  for (let i = 0; i < 60; i++) { // máximo 60 períodos = 5 anos
+    if (proxOcorrencia === currentMesAno) return val;
+    proxOcorrencia = addMeses(proxOcorrencia, periodo);
+    // Se já passou muito além, parar
+    const [m, y] = currentMesAno.split('/');
+    const [m2, y2] = proxOcorrencia.split('/');
+    if (parseInt(y2 + m2) > parseInt(y + m) + 50) break; // muito no futuro
+  }
+  return 0;
 }
 
 function getMesAno(t) {
-  // Tenta coluna Mes/Ano primeiro (aceita variacoes de nome)
-  const raw = t['Mes/Ano'] || t['Mes/Ano '];
+  // Tenta coluna Mes/Ano primeiro (aceita variações de nome)
+  const raw = t['Mes/Ano'] || t['Mês/Ano'] || t['MES/ANO'] || t['mes/ano'] || t['Mes/Ano '];
   const fromCol = parseMesAno(raw);
   if (fromCol) return fromCol;
   // Fallback: deriva da coluna Data
@@ -199,77 +281,6 @@ function filtered() {
   return allTrans.filter(t => getMesAno(t) === ma);
 }
 
-function addMeses(mesAno, n) {
-  if (!mesAno) return null;
-  const [m, y] = mesAno.split('/');
-  const mIdx = MESES.indexOf(m);
-  if (mIdx < 0) return null;
-  const total = mIdx + n;
-  const newY = (2000 + parseInt(y)) + Math.floor(total / 12);
-  const newM = ((total % 12) + 12) % 12;
-  return `${MESES[newM]}/${String(newY).slice(2)}`;
-}
-function addN(mesAno, n) { return addMeses(mesAno, n); }
-
-function mesAnoToNum(ma) {
-  if (!ma) return 0;
-  const [m, y] = ma.split('/');
-  return (2000 + parseInt(y)) * 12 + MESES.indexOf(m);
-}
-
-function calcPlanValue(o, currentMesAno) {
-  const rawVal = parseFloat(o['Valor'] || 0);
-  if (!rawVal) return 0;
-  const freq = (o['Frequencia'] || 'Mensal').trim();
-  const mesInicioRaw = o['Mes_Inicio'] || o['Inicio'] || '';
-  const mesInicio = parseMesAno(mesInicioRaw) || currentMesAno;
-  if (freq === 'Mensal') return Math.abs(rawVal);
-  const periodo = freq === 'Bimestral' ? 2
-    : freq === 'Trimestral' ? 3
-    : freq === 'Quadrimestral' ? 4
-    : freq === 'Semestral' ? 6
-    : freq === 'Anual' ? 12 : 1;
-  if (periodo <= 1) return Math.abs(rawVal);
-  const diff = mesAnoToNum(currentMesAno) - mesAnoToNum(mesInicio);
-  if (diff < 0) return 0;
-  return diff % periodo === 0 ? Math.abs(rawVal) : 0;
-}
-
-function v(t) {
-  return parseFloat(t['Valor_EUR'] || t['Valor'] || 0);
-}
-
-function fmtDate(d) {
-  if (!d) return '';
-  const dm = String(d).match(/Date\((\d+),(\d+),(\d+)\)/);
-  if (dm) { const dt=new Date(dm[1],dm[2],dm[3]); return dt.toLocaleDateString('pt-BR'); }
-  return d;
-}
-
-function mkChart(id, cfg) {
-  if (chartInst[id]) { chartInst[id].destroy(); delete chartInst[id]; }
-  const canvas = document.getElementById(id);
-  if (!canvas) return;
-  chartInst[id] = new Chart(canvas.getContext('2d'), cfg);
-}
-
-function parcForMes(mesAno) {
-  if (!mesAno) return 0;
-  return allParc
-    .filter(p => p['Ativo']==='Sim')
-    .reduce((s, p) => {
-      const inicio = parseMesAno(p['Inicio'] || p['Mes_Inicio'] || '');
-      const tot = parseInt(p['Total_Parcelas'] || 1);
-      const iniNum = mesAnoToNum(inicio);
-      const fimNum = iniNum + tot - 1;
-      const selNum = mesAnoToNum(mesAno);
-      if (selNum >= iniNum && selNum <= fimNum) {
-        return s + Math.abs(parseFloat(p['Valor_SAR'] || 0));
-      }
-      return s;
-    }, 0);
-}
-
 function renderKPIs(trans) {
   const taxa_sar = taxa_sar_live || resumo['Taxa_EUR_SAR'] || 4.3008;
   const taxa_brl = taxa_brl_live || resumo['Taxa_EUR_BRL'] || 6.2;
@@ -287,15 +298,28 @@ function renderKPIs(trans) {
   const parcSeguinteSAR = parcForMes(addN(selMesSAR, 1));
   const totSAR = sabCardSAR + aluguelKSA + parcSeguinteSAR;
 
+  // EUR Saldo (mês selecionado): Grupo="Espanha" + Conta="BBVA", soma de TODOS os valores
+  // (positivos e negativos) EXCETO linhas cujo Sub_Categoria (col F) seja "Salário"
   const totEUR = trans
     .filter(t => t['Grupo']==='Espanha' && (t['Conta']||t['conta'])==='BBVA'
-      && (t['Sub_Categoria']||'')!=='Salario')
+      && (t['Sub_Categoria']||'')!=='Salário')
     .reduce((s,t) => s+v(t), 0);
 
+  const receitasRealTotal = trans.filter(t => t['Grupo']==='Espanha' && v(t)>0 && (t['Categoria']||'')!=='Extras')
+    .reduce((s,t) => s+v(t), 0);
+  const receitasOrcTotal = allOrc.filter(o => o['Grupo']==='Receita' && o['Ativo']==='Sim')
+    .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
+  const receitaAtual = receitasRealTotal > 0 ? receitasRealTotal : receitasOrcTotal;
+
+  // Saldo atualizado (real até agora): soma de TODOS os valores da Conta="BBVA" do mês,
+  // independente do Grupo — assim inclui o Salário (que cai no BBVA, mas tem Grupo "Arabia Saudita").
   const saldoAtual = trans
     .filter(t => (t['Conta']||t['conta'])==='BBVA')
     .reduce((s,t) => s+v(t), 0);
 
+  // Previsto não debitado: Orcamento (Grupo "Espanha", exclui Receita) vs Transacoes (Grupo "Espanha"),
+  // casando por Sub_Descricao ↔ Sub_Categoria. Usa Periodicidade + Mes/Ano (calcPlanValue) para saber
+  // se a despesa cai no mês; se já debitou algo em Real, não conta a diferença.
   const currentMesAno = document.getElementById('selMes').value;
   const planBySub = {};
   allOrc.filter(o => o['Grupo']==='Espanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim'
@@ -316,15 +340,40 @@ function renderKPIs(trans) {
   });
   const saldoPrev = saldoAtual - prevNaoDebit;
 
-  let saldoProx = 0;
+  function mesIdxFn(mesAno) {
+    const [m, y] = mesAno.split('/');
+    const fy = parseInt(y) < 100 ? 2000+parseInt(y) : parseInt(y);
+    return fy*12 + MESES.indexOf(m);
+  }
+  function addN(sel, n) {
+    if (!sel) return null;
+    const [m, y] = sel.split('/');
+    const fy = parseInt(y) < 100 ? 2000+parseInt(y) : parseInt(y);
+    const t = fy*12 + MESES.indexOf(m) + n;
+    return `${MESES[t%12]}/${String(Math.floor(t/12)).slice(2)}`;
+  }
   const mesProx = addN(currentMesAno, 2);
   const mesParc = addN(currentMesAno, 3);
+
+  function parcForMes(target) {
+    if (!target) return 0;
+    const tgt = mesIdxFn(target);
+    const now = new Date(); const nowIdx = now.getFullYear()*12+now.getMonth();
+    return allParc.filter(p => p['Ativo']==='Sim').reduce((s,p) => {
+      const sar=Math.abs(parseFloat(p['Valor_SAR']||0));
+      const cur=parseInt(p['Parcela_Atual']||1), tot=parseInt(p['Total_Parcelas']||1), left=tot-cur+1;
+      const mi=(p['Inicio']||p['Mes_Inicio']||'').trim();
+      const start = mi ? mesIdxFn(mi) : nowIdx;
+      return (tgt>=start && tgt<start+left) ? s+sar : s;
+    }, 0);
+  }
+
+  let saldoProx = 0;
   allOrc.filter(o => o['Ativo']==='Sim').forEach(o => {
-    const moeda = (o['Moeda'] || 'EUR').trim();
+    const planVal = calcPlanValue(o, mesProx);
+    if (planVal === 0) return;
+    const moeda = o['Moeda'] || 'EUR';
     const rawVal = parseFloat(o['Valor'] || 0);
-    if (!rawVal) return;
-    let planVal = calcPlanValue(o, mesProx);
-    if (!planVal) return;
     let valEUR = planVal;
     if (moeda === 'SAR') valEUR = valEUR / taxa_sar;
     else if (moeda === 'BRL') valEUR = valEUR / taxa_brl;
@@ -332,15 +381,16 @@ function renderKPIs(trans) {
     saldoProx += valEUR;
   });
   const parcProxSAR = parcForMes(mesParc);
-  saldoProx -= parcProxSAR / taxa_sar;
+  const parcProxEUR = parcProxSAR / taxa_sar;
+  saldoProx -= parcProxEUR;
 
-  const proxLabel = mesProx || 'proximo';
+  const proxLabel = mesProx || 'próximo';
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi red"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Saudi Arabia (mes atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">SAB_Card do mes + Aluguel (KSA) + Parcelas ${addN(selMesSAR,1)||''}</div></div>
-    <div class="kpi orange"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/es.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Spain (ate o momento)</div><div class="kpi-val">&#x20AC; ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA &#x2014; saldo do mes (sem Salario)</div></div>
-    <div class="kpi green"><div class="kpi-lbl">&#x1F4B6; Balance Spain<br>(real ate agora)</div><div class="kpi-val">&#x20AC; ${fmt(saldoAtual,2)}</div><div class="kpi-sub">BBVA &#x2014; saldo do mes (com Salario)</div></div>
-    <div class="kpi blue"><div class="kpi-lbl">&#x1F52E; Balance Spain<br>(real + previsto mes)</div><div class="kpi-val">&#x20AC; ${fmt(saldoPrev,2)}</div><div class="kpi-sub">Saldo real &#x2212; Previsto nao debitado (&#x20AC; ${fmt(prevNaoDebit,2)})</div></div>
-    <div class="kpi purple"><div class="kpi-lbl">&#x1F4C5; Saldo Planejado<br>${proxLabel}</div><div class="kpi-val">&#x20AC; ${fmt(saldoProx,2)}</div><div class="kpi-sub">Orcamento (todas as moedas) &#x2212; Parcelas (${mesParc||''})</div></div>`;
+    <div class="kpi red"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">SAB_Card do mês + Aluguel (KSA) + Parcelas ${addN(selMesSAR,1)||''}</div></div>
+    <div class="kpi orange"><div class="kpi-lbl"><img src="https://flagcdn.com/16x12/es.png" style="vertical-align:middle;margin-right:3px"> Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — saldo do mês (sem Salário)</div></div>
+    <div class="kpi green"><div class="kpi-lbl">💶 Balance Spain<br>(real até agora)</div><div class="kpi-val">€ ${fmt(saldoAtual,2)}</div><div class="kpi-sub">BBVA — saldo do mês (com Salário)</div></div>
+    <div class="kpi blue"><div class="kpi-lbl">🔮 Balance Spain<br>(real + previsto mês)</div><div class="kpi-val">€ ${fmt(saldoPrev,2)}</div><div class="kpi-sub">Saldo real − Previsto não debitado (€ ${fmt(prevNaoDebit,2)})</div></div>
+    <div class="kpi purple"><div class="kpi-lbl">📅 Saldo Planejado<br>${proxLabel}</div><div class="kpi-val">€ ${fmt(saldoProx,2)}</div><div class="kpi-sub">Orçamento (todas as moedas) − Parcelas (${mesParc||''})</div></div>`;
 }
 
 function renderEspanha(trans) {
@@ -373,28 +423,9 @@ function renderEspanha(trans) {
   Object.entries(realRaw).forEach(([c, net]) => { if (net < 0) realMap[c] = Math.abs(net); });
 
   const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
-    .filter(c => !c.toLowerCase().includes('receita') && !c.toLowerCase().includes('salario') && !c.toLowerCase().includes('sal&#x00E1;rio'))
+    .filter(c => !c.toLowerCase().includes('receita'))
     .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-
-  mkChart('cEsp', {
-    type: 'bar',
-    data: {
-      labels: cats,
-      datasets: [
-        {label:'Real (EUR)', data:cats.map(c=>realMap[c]||0), backgroundColor:'rgba(231,76,60,0.8)', borderRadius:3},
-        {label:'Plan (EUR)', data:cats.map(c=>planMap[c]||0), backgroundColor:'rgba(39,174,96,0.7)', borderRadius:3}
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {legend:{position:'top',labels:{font:{size:10}}}},
-      scales: {
-        x: {grid:{display:false}, ticks:{font:{size:8},maxRotation:45}},
-        y: {beginAtZero:true, grid:{color:'#eee'}, ticks:{callback: n => '&#x20AC;'+fmt(n,0)}}
-      }
-    }
-  });
+  mkChart('cEsp',{type:'bar',data:{labels:cats,datasets:[{label:'Real (€)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (€)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{grid:{color:'#eee'},ticks:{callback:n=>'€'+fmt(n,0)}}}}});
 }
 
 function renderArabia(trans) {
@@ -413,29 +444,8 @@ function renderArabia(trans) {
   });
   const realMap = {};
   Object.entries(realRaw).forEach(([c,val]) => { if (val<0) realMap[c]=Math.abs(val); });
-  const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])]
-    .filter(c => !c.toLowerCase().includes('receita'))
-    .sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
-
-  mkChart('cArab', {
-    type: 'bar',
-    data: {
-      labels: cats,
-      datasets: [
-        {label:'Real (SAR)', data:cats.map(c=>realMap[c]||0), backgroundColor:'rgba(231,76,60,0.8)', borderRadius:3},
-        {label:'Plan (SAR)', data:cats.map(c=>planMap[c]||0), backgroundColor:'rgba(39,174,96,0.7)', borderRadius:3}
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {legend:{position:'top',labels:{font:{size:10}}}},
-      scales: {
-        x: {grid:{display:false}, ticks:{font:{size:8},maxRotation:45}},
-        y: {beginAtZero:true, grid:{color:'#eee'}, ticks:{callback: n => fmt(n,0)}}
-      }
-    }
-  });
+  const cats = [...new Set([...Object.keys(planMap),...Object.keys(realMap)])].filter(c => !c.toLowerCase().includes('receita')).sort((a,b) => (planMap[b]||0)-(planMap[a]||0));
+  mkChart('cArab',{type:'bar',options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}}},data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]}});
 }
 
 function renderParc() {
@@ -456,11 +466,11 @@ function renderParc() {
   const tots = new Array(6).fill(0);
   const rows = active.map(p => {
     const sar=Math.abs(parseFloat(p['Valor_SAR']||0)),cur=parseInt(p['Parcela_Atual']||1),tot=parseInt(p['Total_Parcelas']||1),left=tot-cur+1,offset=startOffset(p);
-    const cells=cols.map((_,i)=>{if(i>=offset&&i<offset+left){tots[i]+=sar;return `<td class="r neg">${fmt(sar,0)}</td>`;}return `<td class="r" style="color:var(--muted)">&#x2014;</td>`;});
-    const desc=p['Descricao']||'&#x2014;';
+    const cells=cols.map((_,i)=>{if(i>=offset&&i<offset+left){tots[i]+=sar;return `<td class="r neg">${fmt(sar,0)}</td>`;}return `<td class="r" style="color:var(--muted)">—</td>`;});
+    const desc=p['Descricao']||'—';
     return `<tr><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc}</td><td class="r">${cur}/${tot}</td><td class="r">${fmt(sar*tot,0)}</td>${cells.join('')}</tr>`;
   }).join('');
-  document.getElementById('parcWrap').innerHTML=`<table><thead><tr><th>Item</th><th class="r">Parc.</th><th class="r">Total</th>${cols.map(c=>`<th class="r">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3">Total SAR/mes</td>${tots.map(t=>`<td class="r">${fmt(t,0)}</td>`).join('')}</tr></tfoot></table>`;
+  document.getElementById('parcWrap').innerHTML=`<table><thead><tr><th>Item</th><th class="r">Parc.</th><th class="r">Total</th>${cols.map(c=>`<th class="r">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3">Total SAR/mês</td>${tots.map(t=>`<td class="r">${fmt(t,0)}</td>`).join('')}</tr></tfoot></table>`;
 }
 
 const PALETTE = ['#4A90D9','#F5A623','#7ED321','#F7931A','#9B59B6','#1ABC9C','#E74C3C','#3498DB','#E67E22','#2ECC71','#E91E63','#00BCD4','#FF5722','#607D8B','#8BC34A','#FFC107','#795548','#9E9E9E'];
@@ -469,14 +479,14 @@ function renderInvest() {
   const ativos = allPortfolio.filter(p => p['Ativo'] && parseFloat(p['Valor_EUR']||0)>0).sort((a,b)=>parseFloat(b['Valor_EUR']||0)-parseFloat(a['Valor_EUR']||0));
   const totalPort = ativos.reduce((s,p)=>s+parseFloat(p['Valor_EUR']||0),0);
   const total = totalPort || resumo['Saldo_Poupanca_EUR']||0;
-  const falta=resumo['Falta_Meta_EUR']||0,pct=Math.min((total/200000)*100,100),meses=resumo['Meses_Para_Meta']||0,previsao=resumo['Previsao_Meta']||'&#x2014;',ritmo=resumo['Ritmo_Jan2028_EUR']||0;
+  const falta=resumo['Falta_Meta_EUR']||0,pct=Math.min((total/200000)*100,100),meses=resumo['Meses_Para_Meta']||0,previsao=resumo['Previsao_Meta']||'—',ritmo=resumo['Ritmo_Jan2028_EUR']||0;
 
   const donutHtml = ativos.length ? `
     <div style="display:flex;align-items:center;gap:10px;margin:10px 0">
       <div style="position:relative;width:110px;height:110px;flex-shrink:0">
         <canvas id="cPortfolio" width="110" height="110"></canvas>
         <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-          <div style="font-size:.7rem;font-weight:700;color:var(--text)">&#x20AC; ${fmt(totalPort,0)}</div>
+          <div style="font-size:.7rem;font-weight:700;color:var(--text)">€ ${fmt(totalPort,0)}</div>
           <div style="font-size:.55rem;color:var(--muted)">Positions</div>
         </div>
       </div>
@@ -495,12 +505,12 @@ function renderInvest() {
     </div>` : '';
 
   document.getElementById('investWrap').innerHTML=`
-  <div class="invest-total"><div class="val">&#x20AC; ${fmt(total,0)}</div><div class="lbl">Poupanca atual</div></div>
+  <div class="invest-total"><div class="val">€ ${fmt(total,0)}</div><div class="lbl">Poupança atual</div></div>
   <div style="background:#ede8e0;border-radius:8px;height:10px;margin:6px 0"><div style="background:var(--green);border-radius:8px;height:10px;width:${pct}%"></div></div>
   <div style="font-size:.67rem;color:var(--muted);line-height:1.6">
-    <div>&#x1F4CC; Falta: <b>&#x20AC; ${fmt(falta,0)}</b> para meta &#x20AC;200k</div>
-    <div>&#x1F4C5; Previsao: <b>${previsao}</b> (${fmt(meses,1)} meses)</div>
-    <div>&#x26A1; Ritmo p/ Jan/2028: <b>&#x20AC; ${fmt(ritmo,0)}/mes</b></div>
+    <div>📌 Falta: <b>€ ${fmt(falta,0)}</b> para meta €200k</div>
+    <div>📅 Previsão: <b>${previsao}</b> (${fmt(meses,1)} meses)</div>
+    <div>⚡ Ritmo p/ Jan/2028: <b>€ ${fmt(ritmo,0)}/mês</b></div>
   </div>
   ${donutHtml}`;
 
@@ -515,7 +525,7 @@ function renderInvest() {
       options:{
         responsive:false,
         cutout:'70%',
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const vv=ctx.parsed;const pc=(vv/totalPort*100).toFixed(1);return ` ${ctx.label}: EUR${fmt(vv,0)} (${pc}%)`;}}}},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const vv=ctx.parsed;const pc=(vv/totalPort*100).toFixed(1);return ` ${ctx.label}: € ${fmt(vv,0)} (${pc}%)`;}}}},
         animation:{duration:600}
       }
     });
@@ -528,7 +538,7 @@ function renderArabReal(trans) {
     const cat=t['Categoria']||'Outros';
     raw[cat]=(raw[cat]||0)+v(t);
   });
-  const sorted=Object.entries(raw).filter(([,val])=>val<0).map(([c,val])=>[c,Math.abs(val)]).sort((a,b)=>b[1]-a[1]).slice(0,14);
+  const sorted=Object.entries(raw).filter(([,v])=>v<0).map(([c,v])=>[c,Math.abs(v)]).sort((a,b)=>b[1]-a[1]).slice(0,14);
   if (!sorted.length) { document.getElementById('arabRealWrap').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Sem dados SAR</div>'; return; }
   const max=sorted[0][1];
   document.getElementById('arabRealWrap').innerHTML=sorted.map(([cat,val])=>`<div class="hb"><div class="hb-lbl" title="${cat}">${cat}</div><div class="hb-track"><div class="hb-fill" style="width:${(val/max)*100}%"><span class="hb-val">${fmt(val,0)}</span></div></div></div>`).join('');
@@ -550,7 +560,7 @@ async function fetchLiveRates() {
     taxa_sar_live = data.rates.SAR;
     taxa_brl_live = data.rates.BRL;
   } catch(e) {
-    console.warn('taxas ao vivo indisponiveis:', e.message);
+    console.warn('Não conseguiu buscar taxas ao vivo, usando fallback:', e.message);
     taxa_sar_live = null;
     taxa_brl_live = null;
   }
@@ -558,12 +568,8 @@ async function fetchLiveRates() {
 
 async function init() {
   try {
-    [allTrans,allOrc,allParc,allPortfolio]=await Promise.all([
-      gviz('Transacoes').catch(()=>gviz('Transacoes').catch(()=>[])),
-      gviz('Orcamento'),
-      gviz('Parcelamentos'),
-      gviz('Portfolio').catch(()=>[])
-    ]);
+    [allTrans,allOrc,allParc,allPortfolio]=await Promise.all([gviz('Transacoes'),gviz('Orcamento'),gviz('Parcelamentos'),gviz('Portfolio').catch(()=>[])]);
+    applyRemaps(allTrans);
     const resumoRows=await gviz('Resumo');
     resumo=resumoRows.length?resumoRows[resumoRows.length-1]:{};
     const att=resumo['Data_Atualizacao'];
@@ -575,7 +581,7 @@ async function init() {
     renderInvest();
   } catch(e) {
     console.error(e);
-    document.getElementById('kpiRow').innerHTML=`<div style="color:var(--red);padding:20px;grid-column:1/-1">Erro ao carregar. Verifique se a planilha esta publica.<br><small>${e.message}</small></div>`;
+    document.getElementById('kpiRow').innerHTML=`<div style="color:var(--red);padding:20px;grid-column:1/-1">❌ Erro ao carregar. Verifique se a planilha está pública.<br><small>${e.message}</small></div>`;
   }
 }
 
