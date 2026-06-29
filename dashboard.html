@@ -230,9 +230,16 @@ function mkChart(id, cfg) {
 
 function buildSel() {
   const sel = document.getElementById('selMes');
+  console.log('allTrans count:', allTrans.length);
+  if (allTrans.length > 0) {
+    const sample = allTrans[0];
+    console.log('Mes_Ano sample raw:', sample['Mes_Ano'], '→ parsed:', parseMesAno(sample['Mes_Ano']));
+  }
   const meses = [...new Set(allTrans.map(t => parseMesAno(t['Mes_Ano'])).filter(Boolean))].sort((a,b)=>mesAnoToNum(a)-mesAnoToNum(b));
+  console.log('Meses disponíveis:', meses);
   sel.innerHTML = meses.map(m=>`<option value="${m}">${m}</option>`).join('');
   if (meses.length) sel.value = meses[meses.length-1];
+  console.log('Mês selecionado:', sel.value);
 }
 
 function filtered() {
@@ -513,7 +520,7 @@ async function init() {
   try {
     console.log('\n\n========== DASHBOARD INICIANDO (v2.0) ==========\n');
     [allTrans,allOrc,allParc,allPortfolio]=await Promise.all([gviz('Transacoes'),gviz('Orcamento'),gviz('Parcelamentos'),gviz('Portfolio').catch(()=>[])]);
-    console.log(`Carregado: ${allOrc.length} itens de Orçamento\n`);
+    console.log(`Carregado: ${allTrans.length} transações, ${allOrc.length} orçamento\n`);
     applyRemaps(allTrans);
     const resumoRows=await gviz('Resumo');
     resumo=resumoRows.length?resumoRows[resumoRows.length-1]:{};
