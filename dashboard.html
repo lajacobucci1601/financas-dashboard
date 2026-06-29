@@ -43,6 +43,7 @@ header .sub { font-size:0.7rem; opacity:.55; }
 .row1 { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 20px 8px; }
 .row1 > * { min-width:0; overflow:hidden; }
 .row2 { display:grid; grid-template-columns:4fr 2fr 4fr; gap:10px; padding:0 20px 18px; }
+.row2 > * { min-width:0; overflow:hidden; }
 .card { background:var(--card); border-radius:10px; padding:14px; box-shadow:var(--shadow); }
 .card-title { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; margin-bottom:10px; padding-bottom:7px; border-bottom:1px solid var(--border); }
 
@@ -117,7 +118,7 @@ tfoot td.r { text-align:right; color:var(--red); }
 <div class="row2">
   <div class="card">
     <div class="card-title">💳 Parcelamentos — Próximos Meses (SAR)</div>
-    <div id="parcWrap"><div class="loading"><div class="spin"></div></div></div>
+    <div id="parcWrap" style="overflow-x:auto"><div class="loading"><div class="spin"></div></div></div>
   </div>
   <div class="card">
     <div class="card-title">📈 Investimentos</div>
