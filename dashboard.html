@@ -660,8 +660,8 @@ async function fetchLiveRates() {
 
 /* ===== PAGE NAVIGATION ===== */
 function showPage(n, btn) {
-  document.getElementById('page1').style.display = n===1 ? '' : 'none';
-  document.getElementById('page2').style.display = n===2 ? '' : 'none';
+  document.getElementById('page1').style.display = n===1 ? 'block' : 'none';
+  document.getElementById('page2').style.display = n===2 ? 'block' : 'none';
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (n===2 && allTrans.length) buildFilters();
