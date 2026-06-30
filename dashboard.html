@@ -21,11 +21,55 @@ header h1 { font-size:1.1rem; font-weight:700; }
 header .sub { font-size:0.7rem; opacity:.55; }
 #lastUpdate { font-size:0.7rem; opacity:.6; }
 
+/* TABS */
+.tabs { background:var(--header); display:flex; gap:0; border-bottom:2px solid rgba(255,255,255,.1); }
+.tab-btn { background:none; border:none; color:rgba(255,255,255,.55); font-size:.78rem; font-weight:600; padding:9px 22px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; letter-spacing:.3px; transition:color .15s; }
+.tab-btn:hover { color:rgba(255,255,255,.85); }
+.tab-btn.active { color:#fff; border-bottom-color:var(--green); }
+
 /* CONTROLS */
 .ctrl { background:var(--bar); padding:7px 20px; display:flex; align-items:center; gap:12px; }
 .ctrl label { color:rgba(255,255,255,.75); font-size:.72rem; font-weight:600; }
 .ctrl select { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:5px; padding:4px 10px; font-size:.78rem; cursor:pointer; }
 .ctrl select option { background:var(--bar); }
+
+/* PAGE 2 */
+#page2 { display:none; }
+.p2-layout { display:grid; grid-template-columns:200px 1fr; gap:0; min-height:calc(100vh - 120px); }
+.p2-sidebar { background:var(--card); border-right:1px solid var(--border); padding:14px 12px; display:flex; flex-direction:column; gap:14px; }
+.p2-sidebar .filter-group label { display:block; font-size:.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; margin-bottom:5px; }
+.p2-sidebar select, .p2-sidebar input { width:100%; background:#faf7f3; color:var(--text); border:1px solid var(--border); border-radius:5px; padding:5px 8px; font-size:.75rem; }
+.p2-sidebar select:focus, .p2-sidebar input:focus { outline:none; border-color:var(--green); }
+.p2-sidebar .filter-reset { background:var(--bar); color:#fff; border:none; border-radius:5px; padding:7px; font-size:.72rem; font-weight:600; cursor:pointer; width:100%; margin-top:4px; }
+.p2-sidebar .filter-reset:hover { background:var(--header); }
+.p2-main { padding:14px 16px; overflow:auto; }
+.p2-summary { display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+.p2-stat { background:var(--card); border-radius:8px; padding:10px 16px; box-shadow:var(--shadow); border-left:3px solid var(--blue); min-width:140px; }
+.p2-stat.red { border-left-color:var(--red); }
+.p2-stat.green { border-left-color:var(--green); }
+.p2-stat.orange { border-left-color:var(--orange); }
+.p2-stat-lbl { font-size:.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; }
+.p2-stat-val { font-size:1.05rem; font-weight:700; margin-top:2px; }
+.p2-table-wrap { background:var(--card); border-radius:10px; box-shadow:var(--shadow); overflow:auto; max-height:calc(100vh - 230px); }
+.p2-table { width:100%; border-collapse:collapse; font-size:.73rem; }
+.p2-table thead th { background:var(--header); color:#fff; padding:8px 10px; text-align:left; font-size:.67rem; white-space:nowrap; position:sticky; top:0; z-index:2; cursor:pointer; user-select:none; }
+.p2-table thead th:hover { background:#4a3520; }
+.p2-table thead th.r { text-align:right; }
+.p2-table thead th .sort-icon { margin-left:4px; opacity:.5; }
+.p2-table thead th.sorted .sort-icon { opacity:1; }
+.p2-table tbody tr:nth-child(even) { background:#faf7f3; }
+.p2-table tbody tr:hover { background:#f0e8dc; }
+.p2-table tbody td { padding:5px 10px; border-bottom:1px solid #f0ebe4; white-space:nowrap; max-width:200px; overflow:hidden; text-overflow:ellipsis; }
+.p2-table tbody td.r { text-align:right; }
+.p2-table tfoot td { padding:7px 10px; font-weight:700; border-top:2px solid var(--border); background:var(--card); position:sticky; bottom:0; font-size:.72rem; }
+.p2-table tfoot td.r { text-align:right; }
+.chip { display:inline-block; padding:2px 7px; border-radius:10px; font-size:.6rem; font-weight:600; }
+.chip-esp { background:#e8f4fd; color:#1a6fa3; }
+.chip-ksa { background:#fef4e8; color:#a35f1a; }
+.chip-bra { background:#e8fdf0; color:#1a8a3a; }
+.chip-other { background:#f0edf8; color:#6a3fa3; }
+.val-pos { color:var(--green); font-weight:600; }
+.val-neg { color:var(--red); font-weight:600; }
 
 /* KPIs — 5 colunas */
 .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; padding:12px 20px 8px; }
@@ -79,6 +123,7 @@ tfoot td.r { text-align:right; color:var(--red); }
 @media(max-width:900px) {
   .kpi-row { grid-template-columns:repeat(3,1fr); }
   .row1,.row2 { grid-template-columns:1fr; }
+  .p2-layout { grid-template-columns:1fr; }
 }
 </style>
 </head>
@@ -92,6 +137,12 @@ tfoot td.r { text-align:right; color:var(--red); }
   <div id="lastUpdate"></div>
 </header>
 
+<div class="tabs">
+  <button class="tab-btn active" onclick="showPage(1,this)">📊 Dashboard</button>
+  <button class="tab-btn" onclick="showPage(2,this)">📋 Transações</button>
+</div>
+
+<div id="page1">
 <div class="ctrl">
   <label>MÊS/ANO</label>
   <select id="selMes" onchange="applyFilter()"><option value="">Todos</option></select>
@@ -129,6 +180,71 @@ tfoot td.r { text-align:right; color:var(--red); }
     <div id="arabRealWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
 </div>
+</div><!-- end page1 -->
+
+<!-- PAGE 2: Transações -->
+<div id="page2">
+  <div class="p2-layout">
+    <div class="p2-sidebar">
+      <div style="font-size:.78rem;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:8px">🔍 Filtros</div>
+
+      <div class="filter-group">
+        <label>Busca</label>
+        <input type="text" id="f2Search" placeholder="Descrição, categoria..." oninput="renderTrans()">
+      </div>
+      <div class="filter-group">
+        <label>Mês/Ano</label>
+        <select id="f2Mes" onchange="renderTrans()"><option value="">Todos</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Grupo</label>
+        <select id="f2Grupo" onchange="renderTrans()"><option value="">Todos</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Conta</label>
+        <select id="f2Conta" onchange="renderTrans()"><option value="">Todos</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Categoria</label>
+        <select id="f2Cat" onchange="renderTrans()"><option value="">Todos</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Sub_Categoria</label>
+        <select id="f2Sub" onchange="renderTrans()"><option value="">Todos</option></select>
+      </div>
+      <div class="filter-group">
+        <label>Tipo</label>
+        <select id="f2Tipo" onchange="renderTrans()">
+          <option value="">Todos</option>
+          <option value="receita">Receita (+)</option>
+          <option value="despesa">Despesa (−)</option>
+        </select>
+      </div>
+      <button class="filter-reset" onclick="resetFilters()">↺ Limpar filtros</button>
+    </div>
+
+    <div class="p2-main">
+      <div class="p2-summary" id="p2Summary"></div>
+      <div class="p2-table-wrap">
+        <table class="p2-table" id="p2Table">
+          <thead>
+            <tr>
+              <th onclick="sortBy('Data')" id="th-Data">Data <span class="sort-icon">↕</span></th>
+              <th onclick="sortBy('Grupo')" id="th-Grupo">Grupo <span class="sort-icon">↕</span></th>
+              <th onclick="sortBy('Conta')" id="th-Conta">Conta <span class="sort-icon">↕</span></th>
+              <th onclick="sortBy('Categoria')" id="th-Categoria">Categoria <span class="sort-icon">↕</span></th>
+              <th onclick="sortBy('Sub_Categoria')" id="th-Sub_Categoria">Sub_Categoria <span class="sort-icon">↕</span></th>
+              <th onclick="sortBy('Descricao')" id="th-Descricao">Descrição <span class="sort-icon">↕</span></th>
+              <th onclick="sortBy('Valor')" id="th-Valor" class="r">Valor <span class="sort-icon">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="p2Body"><tr><td colspan="7" class="loading"><div class="spin"></div></td></tr></tbody>
+          <tfoot><tr id="p2Foot"><td colspan="6"></td><td class="r"></td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div><!-- end page2 -->
 
 <script>
 const SHEET_ID = '1xEagjesBVqfq9YjjmbS56X6YzeU_ajDHxZyP7D_y9X4';
@@ -540,6 +656,152 @@ async function fetchLiveRates() {
     taxa_sar_live = null;
     taxa_brl_live = null;
   }
+}
+
+/* ===== PAGE NAVIGATION ===== */
+function showPage(n, btn) {
+  document.getElementById('page1').style.display = n===1 ? '' : 'none';
+  document.getElementById('page2').style.display = n===2 ? '' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (n===2 && allTrans.length) buildFilters();
+}
+
+/* ===== PAGE 2: TRANSACTIONS ===== */
+let sortCol = 'Data', sortDir = -1;
+
+function buildFilters() {
+  const unique = (key) => [...new Set(allTrans.map(t => t[key]||'').filter(Boolean))].sort();
+  const fill = (id, vals) => {
+    const el = document.getElementById(id);
+    const cur = el.value;
+    el.innerHTML = '<option value="">Todos</option>' + vals.map(v=>`<option value="${v}">${v}</option>`).join('');
+    if (vals.includes(cur)) el.value = cur;
+  };
+  const mesSet = new Set();
+  allTrans.forEach(t => { const ma = getMesAno(t); if (ma) mesSet.add(ma); });
+  const mesSorted = [...mesSet].sort((a,b) => {
+    const p = s => { const[m,y]=s.split('/'); return (2000+parseInt(y))*100+MESES.indexOf(m); };
+    return p(b)-p(a);
+  });
+  const mesEl = document.getElementById('f2Mes');
+  const curMes = mesEl.value;
+  mesEl.innerHTML = '<option value="">Todos</option>' + mesSorted.map(v=>`<option value="${v}">${v}</option>`).join('');
+  if (mesSorted.includes(curMes)) mesEl.value = curMes;
+
+  fill('f2Grupo', unique('Grupo'));
+  const contaVals = [...new Set([...allTrans.map(t=>t['Conta']||''), ...allTrans.map(t=>t['conta']||'')].filter(Boolean))].sort();
+  fill('f2Conta', contaVals);
+  fill('f2Cat',  unique('Categoria'));
+  fill('f2Sub',  unique('Sub_Categoria'));
+  renderTrans();
+}
+
+function getFilteredTrans() {
+  const mes   = document.getElementById('f2Mes').value;
+  const grupo = document.getElementById('f2Grupo').value;
+  const conta = document.getElementById('f2Conta').value;
+  const cat   = document.getElementById('f2Cat').value;
+  const sub   = document.getElementById('f2Sub').value;
+  const tipo  = document.getElementById('f2Tipo').value;
+  const srch  = (document.getElementById('f2Search').value||'').toLowerCase();
+
+  return allTrans.filter(t => {
+    if (mes   && getMesAno(t) !== mes) return false;
+    if (grupo && (t['Grupo']||'') !== grupo) return false;
+    if (conta && (t['Conta']||t['conta']||'') !== conta) return false;
+    if (cat   && (t['Categoria']||'') !== cat) return false;
+    if (sub   && (t['Sub_Categoria']||'') !== sub) return false;
+    if (tipo === 'receita' && v(t) <= 0) return false;
+    if (tipo === 'despesa' && v(t) >= 0) return false;
+    if (srch) {
+      const hay = [(t['Descricao']||''),(t['Categoria']||''),(t['Sub_Categoria']||''),(t['Grupo']||'')].join(' ').toLowerCase();
+      if (!hay.includes(srch)) return false;
+    }
+    return true;
+  });
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = col === 'Valor' ? -1 : 1; }
+  renderTrans();
+}
+
+function grupoChip(g) {
+  if (!g) return '';
+  const cls = g.includes('Espan') || g.includes('España') ? 'chip-esp'
+    : g.includes('Arabia') || g.includes('Saudi') ? 'chip-ksa'
+    : g.includes('Brasil') ? 'chip-bra' : 'chip-other';
+  return `<span class="chip ${cls}">${g}</span>`;
+}
+
+function renderTrans() {
+  const rows = getFilteredTrans();
+
+  rows.sort((a,b) => {
+    let va, vb;
+    if (sortCol === 'Valor') { va = v(a); vb = v(b); }
+    else if (sortCol === 'Data') {
+      const da = parseDate(a['Data']||a['data'])||new Date(0);
+      const db = parseDate(b['Data']||b['data'])||new Date(0);
+      va = da.getTime(); vb = db.getTime();
+    } else {
+      va = String(a[sortCol]||'').toLowerCase();
+      vb = String(b[sortCol]||'').toLowerCase();
+    }
+    return va < vb ? -sortDir : va > vb ? sortDir : 0;
+  });
+
+  ['Data','Grupo','Conta','Categoria','Sub_Categoria','Descricao','Valor'].forEach(c => {
+    const th = document.getElementById('th-'+c);
+    if (!th) return;
+    th.classList.toggle('sorted', c === sortCol);
+    th.querySelector('.sort-icon').textContent = c === sortCol ? (sortDir===1?'↑':'↓') : '↕';
+  });
+
+  const totalVal = rows.reduce((s,t) => s+v(t), 0);
+  const totalPos = rows.filter(t=>v(t)>0).reduce((s,t)=>s+v(t),0);
+  const totalNeg = rows.filter(t=>v(t)<0).reduce((s,t)=>s+v(t),0);
+  document.getElementById('p2Summary').innerHTML = `
+    <div class="p2-stat"><div class="p2-stat-lbl">Transações</div><div class="p2-stat-val">${rows.length}</div></div>
+    <div class="p2-stat green"><div class="p2-stat-lbl">Total Receitas</div><div class="p2-stat-val val-pos">+${fmt(totalPos,2)}</div></div>
+    <div class="p2-stat red"><div class="p2-stat-lbl">Total Despesas</div><div class="p2-stat-val val-neg">${fmt(totalNeg,2)}</div></div>
+    <div class="p2-stat ${totalVal>=0?'green':'red'}"><div class="p2-stat-lbl">Saldo Filtrado</div><div class="p2-stat-val ${totalVal>=0?'val-pos':'val-neg'}">${fmt(totalVal,2)}</div></div>`;
+
+  const tbody = document.getElementById('p2Body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Nenhuma transação encontrada</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map(t => {
+      const val = v(t);
+      const valClass = val > 0 ? 'val-pos' : val < 0 ? 'val-neg' : '';
+      const valStr = val > 0 ? `+${fmt(val,2)}` : fmt(val,2);
+      const dataStr = fmtDate(t['Data']||t['data']);
+      const desc = (t['Descricao']||t['descricao']||'—').substring(0,60);
+      const conta = t['Conta']||t['conta']||'—';
+      const cat = t['Categoria']||'—';
+      const sub = t['Sub_Categoria']||'—';
+      return `<tr>
+        <td>${dataStr}</td>
+        <td>${grupoChip(t['Grupo'])}</td>
+        <td><b>${conta}</b></td>
+        <td>${cat}</td>
+        <td style="color:var(--muted)">${sub}</td>
+        <td title="${(t['Descricao']||'').replace(/"/g,'&quot;')}">${desc}</td>
+        <td class="r ${valClass}">${valStr}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const foot = document.getElementById('p2Foot');
+  foot.innerHTML = `<td colspan="6" style="color:var(--muted)">Total (${rows.length} transações)</td><td class="r ${totalVal>=0?'val-pos':'val-neg'}">${fmt(totalVal,2)}</td>`;
+}
+
+function resetFilters() {
+  ['f2Mes','f2Grupo','f2Conta','f2Cat','f2Sub','f2Tipo'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('f2Search').value='';
+  renderTrans();
 }
 
 async function init() {
