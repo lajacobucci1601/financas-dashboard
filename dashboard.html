@@ -543,23 +543,44 @@ function renderArabia(trans) {
 function renderParc() {
   const active = allParc.filter(p => p['Ativo']==='Sim');
   if (!active.length) { document.getElementById('parcWrap').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Nenhum parcelamento ativo</div>'; return; }
-  const now = new Date();
-  const cols = [];
-  for (let i=0;i<6;i++) { const d=new Date(now.getFullYear(),now.getMonth()+i,2); cols.push(`${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`); }
-  function startOffset(p) {
-    const mi = (p['Inicio']||p['Mes_Inicio']||'').trim();
-    if (!mi) return 0;
-    const [mm,yy] = mi.split('/');
+
+  function miToIdx(mi) {
+    if (!mi) return null;
+    const [mm, yy] = String(mi).trim().split('/');
     const mIdx = MESES.indexOf(mm);
-    if (mIdx<0) return 0;
-    const diff = (2000+parseInt(yy)-now.getFullYear())*12 + mIdx - now.getMonth();
-    return Math.max(0,diff);
+    if (mIdx < 0) return null;
+    return (2000 + parseInt(yy)) * 12 + mIdx;
   }
+
+  const selMes = document.getElementById('selMes').value;
+  let baseIdx;
+  if (selMes) {
+    baseIdx = miToIdx(selMes);
+  }
+  if (!baseIdx) {
+    const now = new Date();
+    baseIdx = now.getFullYear() * 12 + now.getMonth();
+  }
+
+  const cols = [];
+  for (let i = 0; i < 6; i++) {
+    const total = baseIdx + i;
+    cols.push(`${MESES[total % 12]}/${String(Math.floor(total / 12)).slice(2)}`);
+  }
+
   const tots = new Array(6).fill(0);
   const rows = active.map(p => {
-    const sar=Math.abs(parseFloat(p['Valor_SAR']||0)),cur=parseInt(p['Parcela_Atual']||1),tot=parseInt(p['Total_Parcelas']||1),left=tot-cur+1,offset=startOffset(p);
-    const cells=cols.map((_,i)=>{if(i>=offset&&i<offset+left){tots[i]+=sar;return `<td class="r neg">${fmt(sar,0)}</td>`;}return `<td class="r" style="color:var(--muted)">—</td>`;});
-    const desc=p['Descricao']||'—';
+    const sar = Math.abs(parseFloat(p['Valor_SAR']||0));
+    const cur = parseInt(p['Parcela_Atual']||1);
+    const tot = parseInt(p['Total_Parcelas']||1);
+    const startIdx = miToIdx((p['Inicio']||p['Mes_Inicio']||'').trim()) ?? baseIdx;
+    const endIdx = startIdx + tot;
+    const cells = cols.map((_,i) => {
+      const colIdx = baseIdx + i;
+      if (colIdx >= startIdx && colIdx < endIdx) { tots[i]+=sar; return `<td class="r neg">${fmt(sar,0)}</td>`; }
+      return `<td class="r" style="color:var(--muted)">—</td>`;
+    });
+    const desc = p['Descricao']||'—';
     return `<tr><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc}</td><td class="r">${cur}/${tot}</td><td class="r">${fmt(sar*tot,0)}</td>${cells.join('')}</tr>`;
   }).join('');
   document.getElementById('parcWrap').innerHTML=`<table><thead><tr><th>Item</th><th class="r">Parc.</th><th class="r">Total</th>${cols.map(c=>`<th class="r">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3">Total SAR/mês</td>${tots.map(t=>`<td class="r">${fmt(t,0)}</td>`).join('')}</tr></tfoot></table>`;
@@ -642,6 +663,7 @@ function applyFilter() {
   renderEspanha(trans);
   renderArabia(trans);
   renderArabReal(trans);
+  renderParc();
 }
 
 async function fetchLiveRates() {
@@ -815,7 +837,6 @@ async function init() {
     await fetchLiveRates();
     buildSel();
     applyFilter();
-    renderParc();
     renderInvest();
   } catch(e) {
     console.error(e);
