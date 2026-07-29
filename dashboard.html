@@ -189,6 +189,13 @@ function parseMesAno(val) {
   const s = String(val);
   const m = s.match(/Date\((\d+),(\d+),\d+\)/);
   if (m) return `${MESES[+m[2]]}/${String(+m[1]).slice(2)}`;
+  // Handle Google Sheets m/d/yyyy format (e.g., "4/1/2026" = April 1, 2026)
+  const m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m2) {
+    const month = parseInt(m2[1]) - 1; // Convert to 0-based index for MESES
+    const year = m2[3];
+    return `${MESES[month]}/${String(year).slice(2)}`;
+  }
   return s.trim();
 }
 
