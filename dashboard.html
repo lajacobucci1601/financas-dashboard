@@ -107,7 +107,7 @@ tfoot td.r { text-align:right; color:var(--red); }
     <div style="position:relative;height:280px"><canvas id="cEsp"></canvas></div>
   </div>
   <div class="card">
-    <div class="card-title">&#127462;&#127474; Arabia SAR — Plan vs Real</div>
+    <div class="card-title"><img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:4px"> Arabia SAR — Plan vs Real</div>
     <div style="position:relative;height:280px"><canvas id="cArab"></canvas></div>
   </div>
 </div>
@@ -123,7 +123,7 @@ tfoot td.r { text-align:right; color:var(--red); }
     <div id="investWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
   <div class="card">
-    <div class="card-title">&#127462;&#127474; Arabia Real — Por Categoria (SAR)</div>
+    <div class="card-title"><img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:4px"> Arabia Real — Por Categoria (SAR)</div>
     <div id="arabRealWrap"><div class="loading"><div class="spin"></div></div></div>
   </div>
 </div>
@@ -132,6 +132,8 @@ tfoot td.r { text-align:right; color:var(--red); }
 const SHEET_ID = '1xEagjesBVqfq9YjjmbS56X6YzeU_ajDHxZyP7D_y9X4';
 const MESES   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const _ch     = {};
+const FLAG_SA = '<img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:3px">';
+const FLAG_ES = '<img src="https://flagcdn.com/16x12/es.png" style="vertical-align:middle;margin-right:3px">';
 
 const REMAPS = [
   { test: t => (t['Descricao']||'').toLowerCase().includes('amortizacion de prestamo'), cat: 'Lavanderia' },
@@ -326,8 +328,8 @@ function renderKPIs(trans) {
 
   const proxLabel = mesProx || 'próximo';
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi red"><div class="kpi-lbl">&#127462;&#127474; Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">Todas despesas Arabia (cartão + aluguel + débitos)</div></div>
-    <div class="kpi orange"><div class="kpi-lbl">&#127466;&#127480; Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — despesas do mês</div></div>
+    <div class="kpi red"><div class="kpi-lbl">${FLAG_SA} Total Expenses<br>Saudi Arabia (mês atual)</div><div class="kpi-val">${fmt(totSAR,0)} SAR</div><div class="kpi-sub">Todas despesas Arabia (cartão + aluguel + débitos)</div></div>
+    <div class="kpi orange"><div class="kpi-lbl">${FLAG_ES} Total Expenses<br>Spain (até o momento)</div><div class="kpi-val">€ ${fmt(totEUR,2)}</div><div class="kpi-sub">BBVA — despesas do mês</div></div>
     <div class="kpi green"><div class="kpi-lbl">&#128182; Balance Spain<br>(real até agora)</div><div class="kpi-val">€ ${fmt(saldoAtual,2)}</div><div class="kpi-sub">Receita real − Despesas reais</div></div>
     <div class="kpi blue"><div class="kpi-lbl">&#128302; Balance Spain<br>(real + previsto mês)</div><div class="kpi-val">€ ${fmt(saldoPrev,2)}</div><div class="kpi-sub">Saldo real − Previsto não debitado (€ ${fmt(prevNaoDebit,2)})</div></div>
     <div class="kpi purple"><div class="kpi-lbl">&#128197; Balance Spain<br>(${proxLabel})</div><div class="kpi-val">€ ${fmt(saldoProx,2)}</div><div class="kpi-sub">Receitas orc. − Esp − GordaEsp − Arabia SAR − Parc.${mesParc||''} − BRL − GordaBra</div></div>`;
