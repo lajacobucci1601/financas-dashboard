@@ -196,6 +196,14 @@ function parseMesAno(val) {
     const year = m2[3];
     return `${MESES[month]}/${String(year).slice(2)}`;
   }
+  // Handle format like "Fev-26", "Abr-26", "Jun-26"
+  const m3 = s.match(/^([A-Z][a-z]{2})-(\d{2})$/);
+  if (m3) {
+    const mesNome = m3[1];
+    const year = m3[2];
+    const mesIdx = MESES.indexOf(mesNome);
+    if (mesIdx >= 0) return `${mesNome}/${year}`;
+  }
   return s.trim();
 }
 
