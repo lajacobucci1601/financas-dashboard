@@ -220,18 +220,27 @@ function parsePeriodo(o) {
 }
 
 // Retorna o valor de plano ajustado para despesas periódicas.
-// Lê Periodicidade ("Semestral"/"Trimestral"/número) e Mes/Ano (última cobrança).
-// Só retorna o valor no mês em que a próxima cobrança cai.
+// Lê Periodicidade ("Semestral"/"Trimestral"/número) e Mes/Ano (data de início).
+// Retorna o valor se o mês atual cai em uma ocorrência periódica.
 function calcPlanValue(o, currentMesAno) {
   const val = Math.abs(parseFloat(o['Valor'] || 0));
-  const ultimaCobranca = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
-  if (!ultimaCobranca) return val; // sem última cobrança → mensal normal
+  const dataInicio = parseMesAno(o['Mes/Ano'] || o['Mês/Ano']);
+  if (!dataInicio) return val; // sem data de início → mensal normal
 
   const periodo = parsePeriodo(o);
   if (!periodo || periodo <= 1) return val; // mensal normal
 
-  const proxCobranca = addMeses(ultimaCobranca, periodo);
-  return proxCobranca === currentMesAno ? val : 0;
+  // Verificar se currentMesAno cai em uma ocorrência periódica começando de dataInicio
+  let proxOcorrencia = dataInicio;
+  for (let i = 0; i < 60; i++) { // máximo 60 períodos = 5 anos
+    if (proxOcorrencia === currentMesAno) return val;
+    proxOcorrencia = addMeses(proxOcorrencia, periodo);
+    // Se já passou muito além, parar
+    const [m, y] = currentMesAno.split('/');
+    const [m2, y2] = proxOcorrencia.split('/');
+    if (parseInt(y2 + m2) > parseInt(y + m) + 50) break; // muito no futuro
+  }
+  return 0;
 }
 
 function getMesAno(t) {
