@@ -203,6 +203,7 @@ function addMeses(mesAno, n) {
 // Mapeia texto de periodicidade para número de meses
 function parsePeriodo(o) {
   const periStr = String(o['Periodicidade'] || o['periodicidade'] || o['Obs'] || o['obs'] || '').toLowerCase();
+  if (/trianual/.test(periStr)) return 36;
   if (/semestral/.test(periStr)) return 6;
   if (/trimestral/.test(periStr)) return 3;
   if (/anual/.test(periStr)) return 12;
@@ -260,18 +261,10 @@ function renderKPIs(trans) {
   const taxa_sar = resumo['Taxa_EUR_SAR'] || 4.3008;
   const taxa_brl = resumo['Taxa_EUR_BRL'] || 6.2;
 
-  // SAR Total Expenses (mês selecionado):
-  //   1) Tudo que é SAB_Card na aba Transacoes (coluna Valor) do mês selecionado
-  //   2) + Aluguel (KSA) da aba Orcamento
-  //   3) + Compras Parceladas do mês SEGUINTE ao selecionado (aba Parcelamentos)
-  // (addN e parcForMes são declaradas mais abaixo — function declarations são içadas/hoisted)
   const selMesSAR = document.getElementById('selMes').value;
   const sabCardSAR = Math.abs(trans
     .filter(t => (t['Conta']||t['conta'])==='SAB_Card')
     .reduce((s,t) => s+v(t), 0));
-  // Aluguel KSA: na aba Orcamento o nome "Aluguel (KSA)" fica na coluna Sub_Descricao
-  // (a coluna Descricao tem a categoria, ex: "Moradia (Fixo)"). Busca robusta por
-  // "aluguel" + "ksa" em Sub_Descricao/Descricao.
   const aluguelKSA = allOrc
     .filter(o => {
       const d = (o['Sub_Descricao']||o['Descricao']||'').toLowerCase();
@@ -288,7 +281,6 @@ function renderKPIs(trans) {
       && (t['Sub_Categoria']||'')!=='Salário')
     .reduce((s,t) => s+v(t), 0);
 
-  // Receita real = transações positivas em Espanha excluindo Extras (não é salário)
   const receitasRealTotal = trans.filter(t => t['Grupo']==='Espanha' && v(t)>0 && (t['Categoria']||'')!=='Extras')
     .reduce((s,t) => s+v(t), 0);
   const receitasOrcTotal = allOrc.filter(o => o['Grupo']==='Receita' && o['Ativo']==='Sim')
@@ -296,26 +288,21 @@ function renderKPIs(trans) {
   const receitaAtual = receitasRealTotal > 0 ? receitasRealTotal : receitasOrcTotal;
 
   // Saldo atualizado (real até agora): soma de TODOS os valores da Conta="BBVA" do mês,
-  // independente do Grupo — assim inclui o Salário (que cai no BBVA, mas tem Grupo
-  // "Arabia Saudita"). É o totEUR (despesas Espanha/BBVA) + as entradas de salário.
+  // independente do Grupo — assim inclui o Salário (que cai no BBVA, mas tem Grupo "Arabia Saudita").
   const saldoAtual = trans
     .filter(t => (t['Conta']||t['conta'])==='BBVA')
     .reduce((s,t) => s+v(t), 0);
 
-  // Previsto não debitado: compara Orcamento (Grupo "Espanha") com Transacoes (Grupo "Espanha"),
-  // casando pelo Sub_Descricao (Orcamento) ↔ Sub_Categoria (Transacoes). Para cada item planejado,
-  // se o que já saiu nas Transacoes for menor que o planejado, a diferença ainda não foi debitada.
+  // Previsto não debitado: Orcamento (Grupo "Espanha", exclui Receita) vs Transacoes (Grupo "Espanha"),
+  // casando por Sub_Descricao ↔ Sub_Categoria. Usa Periodicidade + Mes/Ano (calcPlanValue) para saber
+  // se a despesa cai no mês; se já debitou algo em Real, não conta a diferença.
   const currentMesAno = document.getElementById('selMes').value;
   const planBySub = {};
   allOrc.filter(o => o['Grupo']==='Espanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim'
-      && !(o['Descricao']||'').toLowerCase().includes('receita'))  // exclui linhas de Receita
+      && !(o['Descricao']||'').toLowerCase().includes('receita'))
     .forEach(o => {
       const k = o['Sub_Descricao']||o['Descricao']||'Outros';
-      // Coluna H (Mes/Ano): vazia = despesa mensal (conta todo mês);
-      // preenchida = só conta no mês indicado (ex: anual/semestral/único).
-      const ma = parseMesAno(o['Mes/Ano']||o['Mês/Ano']);
-      const plan = (!ma || ma===currentMesAno) ? Math.abs(parseFloat(o['Valor']||0)) : 0;
-      planBySub[k] = (planBySub[k]||0) + plan;
+      planBySub[k] = (planBySub[k]||0) + calcPlanValue(o, currentMesAno);
     });
   const realBySub = {};
   trans.filter(t => t['Grupo']==='Espanha')
@@ -325,9 +312,9 @@ function renderKPIs(trans) {
   Object.entries(planBySub).forEach(([k, plan]) => {
     if (plan<=0) return;
     const realSpent = Math.max(0, -(realBySub[k]||0));
-    const naoDeb = realSpent < plan ? plan - realSpent : 0;
+    const naoDeb = realSpent > 0 ? 0 : plan;
     if (naoDeb>0) prevNaoDebit += naoDeb;
-    dbgLines.push(`${k.padEnd(38).slice(0,38)} plan=${plan.toFixed(2).padStart(9)} real=${realSpent.toFixed(2).padStart(9)} naoDeb=${naoDeb.toFixed(2).padStart(9)}`);
+    dbgLines.push(`${k.padEnd(34).slice(0,34)} plan=${plan.toFixed(2).padStart(9)} real=${realSpent.toFixed(2).padStart(9)} naoDeb=${naoDeb.toFixed(2).padStart(9)}`);
   });
   const saldoPrev = saldoAtual - prevNaoDebit;
   const dbgEl = document.getElementById('dbg');
@@ -335,8 +322,6 @@ function renderKPIs(trans) {
     `DEBUG mês=${currentMesAno}  saldoAtual=${saldoAtual.toFixed(2)}  prevNaoDebit=${prevNaoDebit.toFixed(2)}  saldoPrev=${saldoPrev.toFixed(2)}\n`
     + `--- Itens planejados (Orcamento Espanha) que entram no mês ---\n` + dbgLines.join('\n');
 
-  // Próximo mês: receitas planejadas − todas despesas planejadas (EUR + SAR + BRL)
-  // Periódicos só no mês devido. Parcelas = mês exibido + 1.
   function mesIdxFn(mesAno) {
     const [m, y] = mesAno.split('/');
     const fy = parseInt(y) < 100 ? 2000+parseInt(y) : parseInt(y);
@@ -395,7 +380,6 @@ function renderEspanha(trans) {
   const taxa_brl = resumo['Taxa_EUR_BRL'] || 6.2;
   const planMap = {};
 
-  // Espanha EUR + GordaEspanha + GordaBrasil
   allOrc
     .filter(o => ['Espanha','GordaEspanha','GordaBrasil'].includes(o['Grupo']) && o['Moeda']==='EUR')
     .forEach(o => {
@@ -403,7 +387,6 @@ function renderEspanha(trans) {
       planMap[cat] = (planMap[cat]||0) + calcPlanValue(o, currentMesAno);
     });
 
-  // Pensao Enzo em BRL convertida para EUR
   allOrc.filter(o => o['Moeda']==='BRL' && o['Ativo']==='Sim').forEach(o => {
     const cat = o['Descricao'] || 'Outros';
     const val = Math.abs(parseFloat(o['Valor']||0)) / taxa_brl;
