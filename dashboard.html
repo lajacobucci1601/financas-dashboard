@@ -264,12 +264,16 @@ function renderKPIs(trans) {
     .filter(t => t['Tipo']==='Cartao Credito')
     .reduce((s,t) => s+v(t), 0));
 
-  // EUR: todas despesas reais em Espanha (inclui GordaEsp, GordaBra, Pensão como transações)
-  const totEUR = trans.filter(t => t['Pais/Conta']==='Espanha' && v(t)<0)
+  // EUR: despesas reais em Espanha, líquido de Extras positivos (reembolsos/entradas de Extras
+  // reduzem a despesa mas não são salário — evita dupla contagem)
+  const totEURbruto = trans.filter(t => t['Pais/Conta']==='Espanha' && v(t)<0)
     .reduce((s,t) => s+Math.abs(v(t)), 0);
+  const extrasPos = trans.filter(t => t['Pais/Conta']==='Espanha' && v(t)>0 && (t['Categoria']||'')==='Extras')
+    .reduce((s,t) => s+v(t), 0);
+  const totEUR = totEURbruto - extrasPos;
 
-  // Receita real = todas transações positivas em Espanha
-  const receitasRealTotal = trans.filter(t => t['Pais/Conta']==='Espanha' && v(t)>0)
+  // Receita real = transações positivas em Espanha excluindo Extras (não é salário)
+  const receitasRealTotal = trans.filter(t => t['Pais/Conta']==='Espanha' && v(t)>0 && (t['Categoria']||'')!=='Extras')
     .reduce((s,t) => s+v(t), 0);
   const receitasOrcTotal = allOrc.filter(o => o['Grupo']==='Receita' && o['Ativo']==='Sim')
     .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
