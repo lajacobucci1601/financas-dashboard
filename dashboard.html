@@ -307,7 +307,14 @@ function renderKPIs(trans) {
   const currentMesAno = document.getElementById('selMes').value;
   const planBySub = {};
   allOrc.filter(o => o['Grupo']==='Espanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim')
-    .forEach(o => { const k=o['Sub_Descricao']||o['Descricao']||'Outros'; planBySub[k]=(planBySub[k]||0)+calcPlanValue(o, currentMesAno); });
+    .forEach(o => {
+      const k = o['Sub_Descricao']||o['Descricao']||'Outros';
+      // Coluna H (Mes/Ano): vazia = despesa mensal (conta todo mês);
+      // preenchida = só conta no mês indicado (ex: anual/semestral/único).
+      const ma = parseMesAno(o['Mes/Ano']||o['Mês/Ano']);
+      const plan = (!ma || ma===currentMesAno) ? Math.abs(parseFloat(o['Valor']||0)) : 0;
+      planBySub[k] = (planBySub[k]||0) + plan;
+    });
   const realBySub = {};
   trans.filter(t => t['Grupo']==='Espanha')
     .forEach(t => { const k=t['Sub_Categoria']||t['Categoria']||'Outros'; realBySub[k]=(realBySub[k]||0)+v(t); });
