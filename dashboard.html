@@ -601,7 +601,7 @@ async function fetchLiveRates() {
 
 async function init() {
   try {
-    console.log('\n\n========== DASHBOARD INICIANDO ==========\n');
+    console.log('\n\n========== DASHBOARD INICIANDO (v2.0) ==========\n');
     [allTrans,allOrc,allParc,allPortfolio]=await Promise.all([gviz('Transacoes'),gviz('Orcamento'),gviz('Parcelamentos'),gviz('Portfolio').catch(()=>[])]);
     console.log(`Carregado: ${allOrc.length} itens de Orçamento\n`);
     applyRemaps(allTrans);
