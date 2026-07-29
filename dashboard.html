@@ -236,10 +236,11 @@ tfoot td.r { text-align:right; color:var(--red); }
               <th onclick="sortBy('Sub_Categoria')" id="th-Sub_Categoria">Sub_Categoria <span class="sort-icon">↕</span></th>
               <th onclick="sortBy('Descricao')" id="th-Descricao">Descrição <span class="sort-icon">↕</span></th>
               <th onclick="sortBy('Valor')" id="th-Valor" class="r">Valor <span class="sort-icon">↕</span></th>
+              <th onclick="sortBy('Moeda_Class')" id="th-Moeda_Class">Moeda <span class="sort-icon">↕</span></th>
             </tr>
           </thead>
-          <tbody id="p2Body"><tr><td colspan="7" class="loading"><div class="spin"></div></td></tr></tbody>
-          <tfoot><tr id="p2Foot"><td colspan="6"></td><td class="r"></td></tr></tfoot>
+          <tbody id="p2Body"><tr><td colspan="8" class="loading"><div class="spin"></div></td></tr></tbody>
+          <tfoot><tr id="p2Foot"><td colspan="6"></td><td class="r"></td><td></td></tr></tfoot>
         </table>
       </div>
     </div>
@@ -774,7 +775,7 @@ function renderTrans() {
     return va < vb ? -sortDir : va > vb ? sortDir : 0;
   });
 
-  ['Data','Grupo','Conta','Categoria','Sub_Categoria','Descricao','Valor'].forEach(c => {
+  ['Data','Grupo','Conta','Categoria','Sub_Categoria','Descricao','Valor','Moeda_Class'].forEach(c => {
     const th = document.getElementById('th-'+c);
     if (!th) return;
     th.classList.toggle('sorted', c === sortCol);
@@ -792,7 +793,7 @@ function renderTrans() {
 
   const tbody = document.getElementById('p2Body');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Nenhuma transação encontrada</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Nenhuma transação encontrada</td></tr>';
   } else {
     tbody.innerHTML = rows.map(t => {
       const val = v(t);
@@ -803,6 +804,7 @@ function renderTrans() {
       const conta = t['Conta']||t['conta']||'—';
       const cat = t['Categoria']||'—';
       const sub = t['Sub_Categoria']||'—';
+      const moeda = t['Moeda_Class']||'—';
       return `<tr>
         <td>${dataStr}</td>
         <td>${grupoChip(t['Grupo'])}</td>
@@ -811,12 +813,13 @@ function renderTrans() {
         <td style="color:var(--muted)">${sub}</td>
         <td title="${(t['Descricao']||'').replace(/"/g,'&quot;')}">${desc}</td>
         <td class="r ${valClass}">${valStr}</td>
+        <td style="color:var(--muted)">${moeda}</td>
       </tr>`;
     }).join('');
   }
 
   const foot = document.getElementById('p2Foot');
-  foot.innerHTML = `<td colspan="6" style="color:var(--muted)">Total (${rows.length} transações)</td><td class="r ${totalVal>=0?'val-pos':'val-neg'}">${fmt(totalVal,2)}</td>`;
+  foot.innerHTML = `<td colspan="6" style="color:var(--muted)">Total (${rows.length} transações)</td><td class="r ${totalVal>=0?'val-pos':'val-neg'}">${fmt(totalVal,2)}</td><td></td>`;
 }
 
 function resetFilters() {
