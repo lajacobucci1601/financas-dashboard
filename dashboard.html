@@ -268,8 +268,12 @@ function renderKPIs(trans) {
   const sabCardSAR = Math.abs(trans
     .filter(t => (t['Conta']||t['conta'])==='SAB_Card')
     .reduce((s,t) => s+v(t), 0));
-  const aluguelKSA = Math.abs(parseFloat(
-    (allOrc.find(o => (o['Descricao']||'')==='Aluguel (KSA)')||{})['Valor'] || 0));
+  // Aluguel KSA: aceita variações ("Aluguel (KSA)", "Aluguel (Arabia)") — busca por
+  // qualquer linha SAR/Arabia no Orcamento cuja Descricao contenha "aluguel"
+  const aluguelKSA = allOrc
+    .filter(o => (o['Descricao']||'').toLowerCase().includes('aluguel')
+      && (o['Grupo']==='Arabia' || o['Moeda']==='SAR'))
+    .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
   const parcSeguinteSAR = parcForMes(addN(selMesSAR, 1));
   const totSAR = sabCardSAR + aluguelKSA + parcSeguinteSAR;
 
