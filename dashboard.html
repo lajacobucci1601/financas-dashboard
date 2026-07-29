@@ -345,7 +345,9 @@ function renderKPIs(trans) {
   }
 
   let saldoProx = 0;
-  allOrc.filter(o => o['Ativo']==='Sim').forEach(o => {
+  console.log(`\n=== SALDO PLANEJADO DEBUG (${mesProx}) ===`);
+  console.log(`Taxa SAR: ${taxa_sar}, Taxa BRL: ${taxa_brl}`);
+  allOrc.filter(o => o['Ativo']==='Sim' && o['Grupo']==='Espanha').forEach(o => {
     const planVal = calcPlanValue(o, mesProx);
     if (planVal === 0) return;
     const moeda = o['Moeda'] || 'EUR';
@@ -353,12 +355,16 @@ function renderKPIs(trans) {
     let valEUR = planVal;
     if (moeda === 'SAR') valEUR = valEUR / taxa_sar;
     else if (moeda === 'BRL') valEUR = valEUR / taxa_brl;
+    const operacao = rawVal > 0 ? '+' : '-';
+    console.log(`${operacao} ${o['Descricao']||'?'} | Valor:${rawVal} ${moeda} | planVal:${planVal} | valEUR:${valEUR.toFixed(2)}`);
     if (rawVal > 0) saldoProx += valEUR;
     else saldoProx -= valEUR;
   });
   const parcProxSAR = parcForMes(mesParc);
   const parcProxEUR = parcProxSAR / taxa_sar;
+  console.log(`\n- Parcelas (${mesParc}): ${parcProxSAR} SAR = ${parcProxEUR.toFixed(2)} EUR`);
   saldoProx -= parcProxEUR;
+  console.log(`\n= TOTAL SALDO PLANEJADO: ${saldoProx.toFixed(2)} EUR\n`);
 
   const proxLabel = mesProx || 'próximo';
   document.getElementById('kpiRow').innerHTML = `
