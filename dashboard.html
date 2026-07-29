@@ -301,17 +301,19 @@ function renderKPIs(trans) {
     .filter(t => (t['Conta']||t['conta'])==='BBVA')
     .reduce((s,t) => s+v(t), 0);
 
-  // Previsto não debitado (despesas planeadas que ainda não saíram)
+  // Previsto não debitado: compara Orcamento (Grupo "Espanha") com Transacoes (Grupo "Espanha"),
+  // casando pelo Sub_Descricao (Orcamento) ↔ Sub_Categoria (Transacoes). Para cada item planejado,
+  // se o que já saiu nas Transacoes for menor que o planejado, a diferença ainda não foi debitada.
   const currentMesAno = document.getElementById('selMes').value;
-  const planByCat = {};
-  allOrc.filter(o => ['Espanha','GordaEspanha'].includes(o['Grupo']) && o['Moeda']==='EUR')
-    .forEach(o => { const c=o['Descricao']||'Outros'; planByCat[c]=(planByCat[c]||0)+calcPlanValue(o, currentMesAno); });
-  const realByCat = {};
+  const planBySub = {};
+  allOrc.filter(o => o['Grupo']==='Espanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim')
+    .forEach(o => { const k=o['Sub_Descricao']||o['Descricao']||'Outros'; planBySub[k]=(planBySub[k]||0)+calcPlanValue(o, currentMesAno); });
+  const realBySub = {};
   trans.filter(t => t['Grupo']==='Espanha')
-    .forEach(t => { const c=t['Categoria']||'Outros'; realByCat[c]=(realByCat[c]||0)+v(t); });
+    .forEach(t => { const k=t['Sub_Categoria']||t['Categoria']||'Outros'; realBySub[k]=(realBySub[k]||0)+v(t); });
   let prevNaoDebit = 0;
-  Object.entries(planByCat).forEach(([cat, plan]) => {
-    const realSpent = Math.max(0, -(realByCat[cat]||0));
+  Object.entries(planBySub).forEach(([k, plan]) => {
+    const realSpent = Math.max(0, -(realBySub[k]||0));
     if (realSpent < plan) prevNaoDebit += plan - realSpent;
   });
   const saldoPrev = saldoAtual - prevNaoDebit;
