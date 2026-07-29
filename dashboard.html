@@ -307,7 +307,8 @@ function renderKPIs(trans) {
   // se o que já saiu nas Transacoes for menor que o planejado, a diferença ainda não foi debitada.
   const currentMesAno = document.getElementById('selMes').value;
   const planBySub = {};
-  allOrc.filter(o => o['Grupo']==='Espanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim')
+  allOrc.filter(o => o['Grupo']==='Espanha' && o['Moeda']==='EUR' && o['Ativo']==='Sim'
+      && !(o['Descricao']||'').toLowerCase().includes('receita'))  // exclui linhas de Receita
     .forEach(o => {
       const k = o['Sub_Descricao']||o['Descricao']||'Outros';
       // Coluna H (Mes/Ano): vazia = despesa mensal (conta todo mês);
