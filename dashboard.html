@@ -347,7 +347,7 @@ function renderKPIs(trans) {
   let saldoProx = 0;
   console.log(`\n=== SALDO PLANEJADO DEBUG (${mesProx}) ===`);
   console.log(`Taxa SAR: ${taxa_sar}, Taxa BRL: ${taxa_brl}`);
-  allOrc.filter(o => o['Ativo']==='Sim' && o['Grupo']==='Espanha').forEach(o => {
+  allOrc.filter(o => o['Ativo']==='Sim').forEach(o => {
     const planVal = calcPlanValue(o, mesProx);
     if (planVal === 0) return;
     const moeda = o['Moeda'] || 'EUR';
