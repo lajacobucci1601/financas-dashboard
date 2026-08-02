@@ -670,7 +670,7 @@ function renderInvest() {
 
 function renderArabReal(trans) {
   const raw = {};
-  trans.filter(t => t['Moeda_Class']==='SAR').forEach(t => {
+  trans.filter(t => t['Grupo']==='Arabia Saudita' && t['Moeda_Class']==='SAR').forEach(t => {
     const cat=effectiveCat(t);
     raw[cat]=(raw[cat]||0)+v(t);
   });
