@@ -263,7 +263,7 @@ tfoot td.r { text-align:right; color:var(--red); }
 <div id="page3">
   <div class="p3-wrap">
     <div class="p3-card">
-      <div class="card-title">📈 Evolução Mensal — Saldo por País (últimos 12 meses)</div>
+      <div class="card-title">📈 Evolução Mensal — Saldo por País, tudo convertido para € (últimos 12 meses)</div>
       <div style="position:relative;height:380px"><canvas id="cEvol"></canvas></div>
     </div>
   </div>
@@ -757,6 +757,16 @@ function showPage(n, btn) {
 }
 
 /* ===== PAGE 3: EVOLUÇÃO MENSAL ===== */
+function valorEUR(t) {
+  const val = v(t);
+  const moeda = t['Moeda_Class'] || 'EUR';
+  const taxa_sar = taxa_sar_live || resumo['Taxa_EUR_SAR'] || 4.3008;
+  const taxa_brl = taxa_brl_live || resumo['Taxa_EUR_BRL'] || 6.2;
+  if (moeda === 'SAR') return val / taxa_sar;
+  if (moeda === 'BRL') return val / taxa_brl;
+  return val;
+}
+
 function renderEvolucao() {
   const monthsSet = new Set();
   allTrans.forEach(t => { const ma = getMesAno(t); if (ma) monthsSet.add(ma); });
@@ -768,18 +778,20 @@ function renderEvolucao() {
 
   const espSeries = last12.map(ma => allTrans
     .filter(t => t['Grupo']==='Espanha' && getMesAno(t)===ma)
-    .reduce((s,t) => s+v(t), 0));
+    .reduce((s,t) => s+valorEUR(t), 0));
   const arabSeries = last12.map(ma => allTrans
     .filter(t => t['Grupo']==='Arabia Saudita' && getMesAno(t)===ma)
-    .reduce((s,t) => s+v(t), 0));
+    .reduce((s,t) => s+valorEUR(t), 0));
+  const totalSeries = last12.map((_,i) => espSeries[i] + arabSeries[i]);
 
   mkChart('cEvol', {
     type: 'line',
     data: {
       labels: last12,
       datasets: [
-        { label:'Saldo Espanha (€)', data:espSeries, borderColor:'#e67e22', backgroundColor:'rgba(230,126,34,.12)', tension:.3, fill:true, yAxisID:'y' },
-        { label:'Saldo Arabia (SAR)', data:arabSeries, borderColor:'#2980b9', backgroundColor:'rgba(41,128,185,.12)', tension:.3, fill:true, yAxisID:'y1' }
+        { label:'Saldo Espanha (€)', data:espSeries, borderColor:'#e67e22', backgroundColor:'rgba(230,126,34,.12)', tension:.3, fill:true },
+        { label:'Saldo Arabia (€, convertido)', data:arabSeries, borderColor:'#2980b9', backgroundColor:'rgba(41,128,185,.12)', tension:.3, fill:true },
+        { label:'Saldo Total (€)', data:totalSeries, borderColor:'#27ae60', backgroundColor:'rgba(39,174,96,.06)', tension:.3, fill:false, borderDash:[5,4] }
       ]
     },
     options: {
@@ -787,12 +799,11 @@ function renderEvolucao() {
       interaction: { mode:'index', intersect:false },
       plugins: {
         legend: { position:'top' },
-        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y,0)}` } }
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: €${fmt(ctx.parsed.y,0)}` } }
       },
       scales: {
         x: { grid:{ display:false } },
-        y:  { position:'left',  grid:{ color:'#eee' }, ticks:{ callback:n=>'€'+fmt(n,0) } },
-        y1: { position:'right', grid:{ drawOnChartArea:false }, ticks:{ callback:n=>fmt(n,0)+' SAR' } }
+        y: { grid:{ color:'#eee' }, ticks:{ callback:n=>'€'+fmt(n,0) } }
       }
     }
   });
