@@ -377,6 +377,21 @@ function calcPlanValue(o, currentMesAno) {
   return 0;
 }
 
+// Converte um valor de uma moeda de origem para uma moeda de destino usando as taxas ao vivo (base EUR)
+function fx(value, from, to) {
+  from = from || 'EUR';
+  if (from === to) return value;
+  const taxa_sar = taxa_sar_live || resumo['Taxa_EUR_SAR'] || 4.3008;
+  const taxa_brl = taxa_brl_live || resumo['Taxa_EUR_BRL'] || 6.2;
+  let eur = value;
+  if (from === 'SAR') eur = value / taxa_sar;
+  else if (from === 'BRL') eur = value / taxa_brl;
+  if (to === 'EUR') return eur;
+  if (to === 'SAR') return eur * taxa_sar;
+  if (to === 'BRL') return eur * taxa_brl;
+  return eur;
+}
+
 function getMesAno(t) {
   const raw = t['Mes/Ano'] || t['Mês/Ano'] || t['MES/ANO'] || t['mes/ano'] || t['Mes/Ano '];
   const fromCol = parseMesAno(raw);
@@ -540,7 +555,8 @@ function renderEspanha(trans) {
     .filter(o => o['Grupo']==='Espanha' && o['Ativo']==='Sim')
     .forEach(o => {
       const cat = o['Descricao'] || 'Outros';
-      planMap[cat] = (planMap[cat]||0) + calcPlanValue(o, currentMesAno);
+      const valorEUR = fx(calcPlanValue(o, currentMesAno), o['Moeda'], 'EUR');
+      planMap[cat] = (planMap[cat]||0) + valorEUR;
     });
 
   const realRaw = {};
@@ -570,7 +586,8 @@ function renderArabia(trans) {
   const planMap = {};
   allOrc.filter(o => o['Grupo']==='Arabia Saudita' && o['Ativo']==='Sim').forEach(o => {
     const cat = o['Descricao'] || 'Outros';
-    planMap[cat] = (planMap[cat]||0) + calcPlanValue(o, currentMesAno);
+    const valorSAR = fx(calcPlanValue(o, currentMesAno), o['Moeda'], 'SAR');
+    planMap[cat] = (planMap[cat]||0) + valorSAR;
   });
   const realRaw = {};
   trans.filter(t => t['Grupo']==='Arabia Saudita').forEach(t => {
