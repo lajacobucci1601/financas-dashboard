@@ -91,6 +91,15 @@ header .sub { font-size:0.7rem; opacity:.55; }
 .card { background:var(--card); border-radius:10px; padding:14px; box-shadow:var(--shadow); }
 .card-title { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; margin-bottom:10px; padding-bottom:7px; border-bottom:1px solid var(--border); }
 
+/* BUDGET ALERT */
+.budget-alert { display:none; font-size:.66rem; color:#a33327; background:#fdeceb; border:1px solid #f3c3bd; border-radius:6px; padding:6px 9px; margin-bottom:8px; line-height:1.5; }
+.budget-alert.show { display:block; }
+
+/* PAGE 3: EVOLUÇÃO */
+#page3 { display:none; }
+.p3-wrap { padding:16px 20px; }
+.p3-card { background:var(--card); border-radius:10px; padding:14px; box-shadow:var(--shadow); }
+
 /* TABLE */
 table { width:100%; border-collapse:collapse; font-size:.73rem; }
 thead th { background:var(--header); color:#fff; padding:6px 8px; text-align:left; font-size:.68rem; white-space:nowrap; }
@@ -140,6 +149,7 @@ tfoot td.r { text-align:right; color:var(--red); }
 <div class="tabs">
   <button class="tab-btn active" onclick="showPage(1,this)">📊 Dashboard</button>
   <button class="tab-btn" onclick="showPage(2,this)">📋 Transações</button>
+  <button class="tab-btn" onclick="showPage(3,this)">📈 Evolução</button>
 </div>
 
 <div id="page1">
@@ -157,10 +167,12 @@ tfoot td.r { text-align:right; color:var(--red); }
 <div class="row1">
   <div class="card">
     <div class="card-title">📊 Espanha € — Plan vs Real (todas as categorias)</div>
+    <div id="espAlert" class="budget-alert"></div>
     <div style="position:relative;height:280px"><canvas id="cEsp"></canvas></div>
   </div>
   <div class="card">
     <div class="card-title"><img src="https://flagcdn.com/16x12/sa.png" style="vertical-align:middle;margin-right:3px"> Arabia SAR — Plan vs Real</div>
+    <div id="arabAlert" class="budget-alert"></div>
     <div style="position:relative;height:280px"><canvas id="cArab"></canvas></div>
   </div>
 </div>
@@ -246,6 +258,16 @@ tfoot td.r { text-align:right; color:var(--red); }
     </div>
   </div>
 </div><!-- end page2 -->
+
+<!-- PAGE 3: Evolução -->
+<div id="page3">
+  <div class="p3-wrap">
+    <div class="p3-card">
+      <div class="card-title">📈 Evolução Mensal — Saldo por País (últimos 12 meses)</div>
+      <div style="position:relative;height:380px"><canvas id="cEvol"></canvas></div>
+    </div>
+  </div>
+</div><!-- end page3 -->
 
 <script>
 const SHEET_ID = '1xEagjesBVqfq9YjjmbS56X6YzeU_ajDHxZyP7D_y9X4';
@@ -538,6 +560,8 @@ function renderEspanha(trans) {
   const allVals = cats.flatMap(c => [realMap[c]||0, planMap[c]||0]).filter(x=>x>0).sort((a,b)=>a-b);
   const yMax = allVals.length > 2 ? allVals[Math.floor(allVals.length*0.85)] * 1.3 : (allVals[allVals.length-1]||1000) * 1.1;
 
+  renderBudgetAlert('espAlert', cats, realMap, planMap, '€');
+
   mkChart('cEsp',{type:'bar',data:{labels:cats,datasets:[{label:'Real (€)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (€)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: €${fmt(ctx.parsed.y,0)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{max:yMax,grid:{color:'#eee'},ticks:{callback:n=>'€'+fmt(n,0)}}}}});
 }
 
@@ -559,6 +583,8 @@ function renderArabia(trans) {
 
   const allVals = cats.flatMap(c => [realMap[c]||0, planMap[c]||0]).filter(x=>x>0).sort((a,b)=>a-b);
   const yMax = allVals.length > 2 ? allVals[Math.floor(allVals.length*0.85)] * 1.3 : (allVals[allVals.length-1]||1000) * 1.1;
+
+  renderBudgetAlert('arabAlert', cats, realMap, planMap, 'SAR');
 
   mkChart('cArab',{type:'bar',data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y,0)} SAR`}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{max:yMax,grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}}}});
 }
@@ -668,6 +694,22 @@ function renderInvest() {
   }
 }
 
+function renderBudgetAlert(elId, cats, realMap, planMap, currency) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const over = cats
+    .filter(c => (planMap[c]||0) > 0 && (realMap[c]||0) > planMap[c])
+    .map(c => [c, realMap[c] - planMap[c]])
+    .sort((a,b) => b[1]-a[1]);
+  if (!over.length) { el.classList.remove('show'); el.innerHTML = ''; return; }
+  el.classList.add('show');
+  const shown = over.slice(0,5);
+  const rest = over.length - shown.length;
+  el.innerHTML = `⚠️ ${over.length} categoria${over.length>1?'s':''} estourada${over.length>1?'s':''}: ` +
+    shown.map(([c,ov]) => `${c} (+${fmt(ov,0)} ${currency})`).join(', ') +
+    (rest>0 ? ` e mais ${rest}` : '');
+}
+
 function renderArabReal(trans) {
   const raw = {};
   trans.filter(t => t['Grupo']==='Arabia Saudita' && t['Moeda_Class']==='SAR').forEach(t => {
@@ -707,9 +749,53 @@ async function fetchLiveRates() {
 function showPage(n, btn) {
   document.getElementById('page1').style.display = n===1 ? 'block' : 'none';
   document.getElementById('page2').style.display = n===2 ? 'block' : 'none';
+  document.getElementById('page3').style.display = n===3 ? 'block' : 'none';
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (n===2 && allTrans.length) buildFilters();
+  if (n===3 && allTrans.length) renderEvolucao();
+}
+
+/* ===== PAGE 3: EVOLUÇÃO MENSAL ===== */
+function renderEvolucao() {
+  const monthsSet = new Set();
+  allTrans.forEach(t => { const ma = getMesAno(t); if (ma) monthsSet.add(ma); });
+  const sorted = [...monthsSet].sort((a,b) => {
+    const p = s => { const[m,y]=s.split('/'); return (2000+parseInt(y))*100+MESES.indexOf(m); };
+    return p(a)-p(b);
+  });
+  const last12 = sorted.slice(-12);
+
+  const espSeries = last12.map(ma => allTrans
+    .filter(t => t['Grupo']==='Espanha' && getMesAno(t)===ma)
+    .reduce((s,t) => s+v(t), 0));
+  const arabSeries = last12.map(ma => allTrans
+    .filter(t => t['Grupo']==='Arabia Saudita' && getMesAno(t)===ma)
+    .reduce((s,t) => s+v(t), 0));
+
+  mkChart('cEvol', {
+    type: 'line',
+    data: {
+      labels: last12,
+      datasets: [
+        { label:'Saldo Espanha (€)', data:espSeries, borderColor:'#e67e22', backgroundColor:'rgba(230,126,34,.12)', tension:.3, fill:true, yAxisID:'y' },
+        { label:'Saldo Arabia (SAR)', data:arabSeries, borderColor:'#2980b9', backgroundColor:'rgba(41,128,185,.12)', tension:.3, fill:true, yAxisID:'y1' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { position:'top' },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y,0)}` } }
+      },
+      scales: {
+        x: { grid:{ display:false } },
+        y:  { position:'left',  grid:{ color:'#eee' }, ticks:{ callback:n=>'€'+fmt(n,0) } },
+        y1: { position:'right', grid:{ drawOnChartArea:false }, ticks:{ callback:n=>fmt(n,0)+' SAR' } }
+      }
+    }
+  });
 }
 
 /* ===== PAGE 2: TRANSACTIONS ===== */
