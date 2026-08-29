@@ -392,6 +392,12 @@ function fx(value, from, to) {
   return eur;
 }
 
+// Valor de uma transação convertido para a moeda de destino, usando a Moeda_Class real da transação
+// (uma transação Grupo='Espanha' paga num cartão SAR, por exemplo, tem que ser convertida antes de somar em €)
+function valorIn(t, to) {
+  return fx(v(t), t['Moeda_Class'], to);
+}
+
 function getMesAno(t) {
   const raw = t['Mes/Ano'] || t['Mês/Ano'] || t['MES/ANO'] || t['mes/ano'] || t['Mes/Ano '];
   const fromCol = parseMesAno(raw);
@@ -463,17 +469,17 @@ function renderKPIs(trans) {
   const totEUR = trans
     .filter(t => t['Grupo']==='Espanha' && (t['Conta']||t['conta'])==='BBVA'
       && (t['Sub_Categoria']||'')!=='Salário')
-    .reduce((s,t) => s+v(t), 0);
+    .reduce((s,t) => s+valorIn(t,'EUR'), 0);
 
   const receitasRealTotal = trans.filter(t => t['Grupo']==='Espanha' && v(t)>0 && (t['Categoria']||'')!=='Extras')
-    .reduce((s,t) => s+v(t), 0);
+    .reduce((s,t) => s+valorIn(t,'EUR'), 0);
   const receitasOrcTotal = allOrc.filter(o => o['Grupo']==='Receita' && o['Ativo']==='Sim')
     .reduce((s,o) => s+Math.abs(parseFloat(o['Valor']||0)), 0);
   const receitaAtual = receitasRealTotal > 0 ? receitasRealTotal : receitasOrcTotal;
 
   const saldoAtual = trans
     .filter(t => (t['Conta']||t['conta'])==='BBVA')
-    .reduce((s,t) => s+v(t), 0);
+    .reduce((s,t) => s+valorIn(t,'EUR'), 0);
 
   const currentMesAno = document.getElementById('selMes').value;
   const planBySub = {};
@@ -485,7 +491,7 @@ function renderKPIs(trans) {
     });
   const realBySub = {};
   trans.filter(t => t['Grupo']==='Espanha')
-    .forEach(t => { const k=t['Sub_Categoria']||t['Categoria']||'Outros'; realBySub[k]=(realBySub[k]||0)+v(t); });
+    .forEach(t => { const k=t['Sub_Categoria']||t['Categoria']||'Outros'; realBySub[k]=(realBySub[k]||0)+valorIn(t,'EUR'); });
   let prevNaoDebit = 0;
   Object.entries(planBySub).forEach(([k, plan]) => {
     if (plan<=0) return;
@@ -564,7 +570,7 @@ function renderEspanha(trans) {
     .filter(t => t['Grupo']==='Espanha')
     .forEach(t => {
       const cat = effectiveCat(t);
-      realRaw[cat] = (realRaw[cat]||0) + v(t);
+      realRaw[cat] = (realRaw[cat]||0) + valorIn(t, 'EUR');
     });
   const realMap = {};
   Object.entries(realRaw).forEach(([c, net]) => { if (net < 0) realMap[c] = Math.abs(net); });
@@ -592,7 +598,7 @@ function renderArabia(trans) {
   const realRaw = {};
   trans.filter(t => t['Grupo']==='Arabia Saudita').forEach(t => {
     const cat = effectiveCat(t);
-    realRaw[cat] = (realRaw[cat]||0) + v(t);
+    realRaw[cat] = (realRaw[cat]||0) + valorIn(t, 'SAR');
   });
   const realMap = {};
   Object.entries(realRaw).forEach(([c,val]) => { if (val<0) realMap[c]=Math.abs(val); });
@@ -729,9 +735,9 @@ function renderBudgetAlert(elId, cats, realMap, planMap, currency) {
 
 function renderArabReal(trans) {
   const raw = {};
-  trans.filter(t => t['Grupo']==='Arabia Saudita' && t['Moeda_Class']==='SAR').forEach(t => {
+  trans.filter(t => t['Grupo']==='Arabia Saudita').forEach(t => {
     const cat=effectiveCat(t);
-    raw[cat]=(raw[cat]||0)+v(t);
+    raw[cat]=(raw[cat]||0)+valorIn(t,'SAR');
   });
   const sorted=Object.entries(raw).filter(([,v])=>v<0).map(([c,v])=>[c,Math.abs(v)]).sort((a,b)=>b[1]-a[1]).slice(0,14);
   if (!sorted.length) { document.getElementById('arabRealWrap').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Sem dados SAR</div>'; return; }
@@ -789,13 +795,7 @@ function goToTransactions(categoria, grupo) {
 
 /* ===== PAGE 3: EVOLUÇÃO MENSAL ===== */
 function valorEUR(t) {
-  const val = v(t);
-  const moeda = t['Moeda_Class'] || 'EUR';
-  const taxa_sar = taxa_sar_live || resumo['Taxa_EUR_SAR'] || 4.3008;
-  const taxa_brl = taxa_brl_live || resumo['Taxa_EUR_BRL'] || 6.2;
-  if (moeda === 'SAR') return val / taxa_sar;
-  if (moeda === 'BRL') return val / taxa_brl;
-  return val;
+  return valorIn(t, 'EUR');
 }
 
 function renderEvolucao() {
