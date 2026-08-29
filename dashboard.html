@@ -578,7 +578,7 @@ function renderEspanha(trans) {
 
   renderBudgetAlert('espAlert', cats, realMap, planMap, '€');
 
-  mkChart('cEsp',{type:'bar',data:{labels:cats,datasets:[{label:'Real (€)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (€)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: €${fmt(ctx.parsed.y,0)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{max:yMax,grid:{color:'#eee'},ticks:{callback:n=>'€'+fmt(n,0)}}}}});
+  mkChart('cEsp',{type:'bar',data:{labels:cats,datasets:[{label:'Real (€)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (€)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,onClick:(evt,els)=>{if(els.length){const idx=els[0].index;goToTransactions(cats[idx],'Espanha');}},onHover:(evt,els)=>{evt.native.target.style.cursor=els.length?'pointer':'default';},plugins:{legend:{position:'top',labels:{font:{size:10}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: €${fmt(ctx.parsed.y,0)}`}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{max:yMax,grid:{color:'#eee'},ticks:{callback:n=>'€'+fmt(n,0)}}}}});
 }
 
 function renderArabia(trans) {
@@ -603,7 +603,7 @@ function renderArabia(trans) {
 
   renderBudgetAlert('arabAlert', cats, realMap, planMap, 'SAR');
 
-  mkChart('cArab',{type:'bar',data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y,0)} SAR`}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{max:yMax,grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}}}});
+  mkChart('cArab',{type:'bar',data:{labels:cats,datasets:[{label:'Real (SAR)',data:cats.map(c=>realMap[c]||0),backgroundColor:'rgba(231,76,60,0.8)',borderRadius:3},{label:'Plan (SAR)',data:cats.map(c=>planMap[c]||0),backgroundColor:'rgba(39,174,96,0.7)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,onClick:(evt,els)=>{if(els.length){const idx=els[0].index;goToTransactions(cats[idx],'Arabia Saudita');}},onHover:(evt,els)=>{evt.native.target.style.cursor=els.length?'pointer':'default';},plugins:{legend:{position:'top',labels:{font:{size:10}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.parsed.y,0)} SAR`}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45}},y:{max:yMax,grid:{color:'#eee'},ticks:{callback:n=>fmt(n,0)}}}}});
 }
 
 function renderParc() {
@@ -771,6 +771,20 @@ function showPage(n, btn) {
   btn.classList.add('active');
   if (n===2 && allTrans.length) buildFilters();
   if (n===3 && allTrans.length) renderEvolucao();
+}
+
+// Navega para a página de Transações já filtrada por categoria/grupo/mês (usado ao clicar numa barra do gráfico)
+function goToTransactions(categoria, grupo) {
+  const tabs = document.querySelectorAll('.tab-btn');
+  showPage(2, tabs[1]);
+  const mesAtual = document.getElementById('selMes').value;
+  const grupoSel = document.getElementById('f2Grupo');
+  const mesSel   = document.getElementById('f2Mes');
+  const catSel   = document.getElementById('f2Cat');
+  if (grupoSel) grupoSel.value = grupo || '';
+  if (mesSel)   mesSel.value = mesAtual || '';
+  if (catSel)   catSel.value = categoria || '';
+  renderTrans();
 }
 
 /* ===== PAGE 3: EVOLUÇÃO MENSAL ===== */
