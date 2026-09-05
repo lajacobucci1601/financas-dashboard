@@ -613,9 +613,6 @@ function renderArabia(trans) {
 }
 
 function renderParc() {
-  const active = allParc.filter(p => p['Ativo']==='Sim');
-  if (!active.length) { document.getElementById('parcWrap').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Nenhum parcelamento ativo</div>'; return; }
-
   function miToIdx(mi) {
     if (!mi) return null;
     const [mm, yy] = String(mi).trim().split('/');
@@ -634,6 +631,18 @@ function renderParc() {
     baseIdx = now.getFullYear() * 12 + now.getMonth();
   }
 
+  // Só considera parcelamentos que ainda têm parcela a vencer a partir do mês atual (não quitados)
+  const active = allParc
+    .filter(p => p['Ativo']==='Sim')
+    .map(p => {
+      const tot = parseInt(p['Total_Parcelas']||1);
+      const startIdx = miToIdx((p['Inicio']||p['Mes_Inicio']||'').trim()) ?? baseIdx;
+      return { p, startIdx, endIdx: startIdx + tot };
+    })
+    .filter(({endIdx}) => endIdx > baseIdx);
+
+  if (!active.length) { document.getElementById('parcWrap').innerHTML='<div style="padding:16px;text-align:center;color:var(--muted)">Nenhum parcelamento ativo</div>'; return; }
+
   const cols = [];
   for (let i = 0; i < 6; i++) {
     const total = baseIdx + i;
@@ -641,12 +650,10 @@ function renderParc() {
   }
 
   const tots = new Array(6).fill(0);
-  const rows = active.map(p => {
+  const rows = active.map(({p, startIdx, endIdx}) => {
     const sar = Math.abs(parseFloat(p['Valor_SAR']||0));
     const cur = parseInt(p['Parcela_Atual']||1);
     const tot = parseInt(p['Total_Parcelas']||1);
-    const startIdx = miToIdx((p['Inicio']||p['Mes_Inicio']||'').trim()) ?? baseIdx;
-    const endIdx = startIdx + tot;
     const cells = cols.map((_,i) => {
       const colIdx = baseIdx + i;
       if (colIdx >= startIdx && colIdx < endIdx) { tots[i]+=sar; return `<td class="r neg">${fmt(sar,0)}</td>`; }
